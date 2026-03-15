@@ -1,0 +1,90 @@
+﻿@page "/produkty/edytuj/{Id:long}"
+@using ComicStore.Models
+@using ComicStore.Services
+@attribute [Authorize(Roles = "Wlasciciel, Pracownik")]
+@inject ProduktService ProduktService
+@inject NavigationManager NavigationManager
+
+<h3>Edytuj Komiks</h3>
+@if (isLoading)
+{
+    <p><em>Ładowanie danych...</em></p>
+}
+else if (edytowanyProdukt == null)
+{
+
+    <p><em>Nie znaleziono produktu.</em></p>
+}
+else
+{
+    <EditForm Model="edytowanyProdukt" OnValidSubmit="ZapiszZmiany">
+        <DataAnnotationsValidator />
+        <div class="row mb-3">
+            <div class="col-md-6"><label>Tytuł:</label><InputText class="form-control" @bind-Value="edytowanyProdukt.Tytul" /></div>
+            <div class="col-md-3"><label>Numer zeszytu:</label><InputNumber class="form-control" @bind-Value="edytowanyProdukt.NumerZeszytu" /></div>
+            <div class="col-md-3"><label>ISBN:</label><InputText class="form-control" @bind-Value="edytowanyProdukt.ISBN" /></div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-4"><label>Cena (zł):</label><InputNumber class="form-control" @bind-Value="edytowanyProdukt.Cena" /></div>
+            <div class="col-md-4"><label>Ilość:</label><InputNumber class="form-control" @bind-Value="edytowanyProdukt.Ilosc" /></div>
+            <div class="col-md-4">
+                <label>Autor:</label><InputSelect class="form-select" @bind-Value="edytowanyProdukt.IdAutora">
+                <option value="">-- Wybierz Autora --</option>
+                @foreach (var a in autorzy)
+                {
+                    <option value="@a.Id">@a.Imie @a.Nazwisko</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label>Wydawnictwo:</label><InputSelect class="form-select" @bind-Value="edytowanyProdukt.IdWydawnictwa">
+            <option value="">-- Wybierz --</option>
+            @foreach (var w in wydawnictwa)
+            {
+                <option value="@w.Id">@w.Nazwa</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="col-md-4">
+        <label>Gatunek:</label><InputSelect class="form-select" @bind-Value="edytowanyProdukt.IdGatunku">
+        <option value="">-- Wybierz --</option>
+        @foreach (var g in gatunki)
+        {
+            <option value="@g.Id">@g.Nazwa</option>
+        }
+    </InputSelect>
+</div>
+<div class="col-md-4">
+    <label>Lokalizacja:</label><InputSelect class="form-select" @bind-Value="edytowanyProdukt.IdLokalizacji">
+    <option value="">-- Wybierz --</option>
+    @foreach (var l in lokalizacje)
+    {
+        <option value="@l.Id">@l.Regal - Półka @l.Polka</option>
+    }
+</InputSelect>
+</div>
+</div>
+<button type="submit" class="btn btn-warning mt-3">Zapisz zmiany</button>
+<a href="/produkty" class="btn btn-secondary mt-3 ms-2">Anuluj</a>
+</EditForm>
+}
+
+@code {
+    [Parameter] public long Id { get; set; }
+    private Produkt? edytowanyProdukt;
+    private bool isLoading = true;
+    private List<Autor> autorzy = new(); private List<Wydawnictwo> wydawnictwa = new();
+    private List<Gatunek> gatunki = new(); private List<Lokalizacja> lokalizacje = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        edytowanyProdukt = await ProduktService.PobierzProduktPoIdAsync(Id);
+        autorzy = await ProduktService.PobierzAutorowAsync(); wydawnictwa = await ProduktService.PobierzWydawnictwaAsync();
+        gatunki = await ProduktService.PobierzGatunkiAsync(); lokalizacje = await ProduktService.PobierzLokalizacjeAsync();
+        isLoading = false;
+    }
+
+    private async Task ZapiszZmiany() { if (edytowanyProdukt != null) { await ProduktService.AktualizujProduktAsync(edytowanyProdukt); NavigationManager.NavigateTo("/produkty"); } }
+}

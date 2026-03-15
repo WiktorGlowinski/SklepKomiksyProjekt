@@ -1,0 +1,34 @@
+﻿@page "/lokalizacje"
+@using ComicStore.Models
+@using ComicStore.Services
+@attribute [Authorize(Roles = "Wlasciciel, Pracownik")]
+@inject ProduktService ProduktService
+
+<h3>Zarządzanie Lokalizacjami</h3>
+<EditForm Model="nowaLokalizacja" OnValidSubmit="ZapiszLokalizacje" class="mb-4 p-3 border rounded">
+    <DataAnnotationsValidator />
+    <label>Regał:</label> <InputText @bind-Value="nowaLokalizacja.Regal" class="form-control mb-2" />
+    <label>Półka:</label> <InputNumber @bind-Value="nowaLokalizacja.Polka" class="form-control mb-2" />
+    <button type="submit" class="btn btn-primary">Dodaj Lokalizację</button>
+</EditForm>
+
+@if (listaLokalizacji != null)
+{
+    <table class="table table-striped">
+        <thead><tr><th>ID</th><th>Regał</th><th>Półka</th></tr></thead>
+        <tbody>
+            @foreach (var lok in listaLokalizacji)
+            {
+                <tr><td>@lok.Id</td><td>@lok.Regal</td><td>@lok.Polka</td></tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private Lokalizacja nowaLokalizacja = new();
+    private List<Lokalizacja>? listaLokalizacji;
+    protected override async Task OnInitializedAsync() => await OdswiezListe();
+    private async Task ZapiszLokalizacje() { await ProduktService.DodajLokalizacjeAsync(nowaLokalizacja); nowaLokalizacja = new Lokalizacja(); await OdswiezListe(); }
+    private async Task OdswiezListe() => listaLokalizacji = await ProduktService.PobierzLokalizacjeAsync();
+}

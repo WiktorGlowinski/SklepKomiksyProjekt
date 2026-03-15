@@ -1,0 +1,29 @@
+﻿@page "/produkty/usun/{Id:long}"
+@using ComicStore.Models
+@using ComicStore.Services
+@attribute [Authorize(Roles = "Wlasciciel, Pracownik")]
+@inject ProduktService ProduktService
+@inject NavigationManager NavigationManager
+
+<h3>Usuń Komiks</h3>
+@if (produktDoUsuniecia == null)
+{
+    <p><em>Ładowanie danych...</em></p>
+}
+else
+{
+    <div class="alert alert-danger">
+        <h4>Czy na pewno chcesz usunąć ten komiks?</h4><p>Tej operacji nie można cofnąć.</p><hr />
+        <p><strong>Tytuł:</strong> @produktDoUsuniecia.Tytul</p>
+        <p><strong>Ilość:</strong> @produktDoUsuniecia.Ilosc szt.</p>
+    </div>
+    <button @onclick="PotwierdzUsuniecie" class="btn btn-danger">Tak, usuń</button>
+    <a href="/produkty" class="btn btn-secondary ms-2">Anuluj</a>
+}
+
+@code {
+    [Parameter] public long Id { get; set; }
+    private Produkt? produktDoUsuniecia;
+    protected override async Task OnInitializedAsync() => produktDoUsuniecia = await ProduktService.PobierzProduktPoIdAsync(Id);
+    private async Task PotwierdzUsuniecie() { await ProduktService.UsunProduktAsync(Id); NavigationManager.NavigateTo("/produkty"); }
+}

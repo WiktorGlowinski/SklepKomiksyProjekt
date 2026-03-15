@@ -1,0 +1,63 @@
+﻿@page "/produkty"
+@using ComicStore.Models
+@using ComicStore.Services
+@inject ProduktService ProduktService
+
+<h3>Stan Magazynu Komiksów</h3>
+
+@if (produkty == null)
+{
+    <p><em>Ładowanie stanu magazynu...</em></p>
+}
+else
+{
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Tytuł</th>
+                <th>Zeszyt nr</th>
+                <th>ISBN</th>
+                <th>Cena</th>
+                <th>Ilość</th>
+                <AuthorizeView Roles="Wlasciciel, Pracownik">
+                    <Authorized><th>Akcje</th></Authorized>
+                </AuthorizeView>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in produkty)
+            {
+                <tr>
+                    <td>@p.Tytul</td>
+                    <td>@(p.NumerZeszytu?.ToString() ?? "-")</td>
+                    <td>@(p.ISBN ?? "-")</td>
+                    <td>@p.Cena zł</td>
+                    <td>
+                        @if (p.Ilosc > 0)
+                        {
+                            <span class="text-success fw-bold">@p.Ilosc szt.</span>
+                        }
+                        else
+                        {
+
+                            <span class="text-danger fw-bold">Brak</span>
+                        }
+                    </td>
+                    <AuthorizeView Roles="Wlasciciel, Pracownik">
+                        <Authorized>
+                            <td>
+                                <a href="/produkty/edytuj/@p.Id" class="btn btn-sm btn-warning">Edytuj</a>
+                                <a href="/produkty/usun/@p.Id" class="btn btn-sm btn-danger">Usuń</a>
+                            </td>
+                        </Authorized>
+                    </AuthorizeView>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Produkt>? produkty;
+    protected override async Task OnInitializedAsync() => produkty = await ProduktService.PobierzWszystkieProduktyAsync();
+}
