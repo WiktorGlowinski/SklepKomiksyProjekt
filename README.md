@@ -1,12 +1,5 @@
 # SklepKomiksyProjekt
-systemy informatyczne projekt 1/2 semestr letni 2026
-Pewnie, Wiktor! Dobry plik README.md to podstawa każdego projektu, zwłaszcza jeśli będziesz chciał do niego wrócić po jakimś czasie lub wrzucić go na GitHuba jako część swojego portfolio.
 
-Przygotowałem dla Ciebie kompletny plik w formacie Markdown, który opisuje całą strukturę, użyte technologie oraz instrukcję uruchomienia aplikacji.
-
-Wystarczy, że skopiujesz poniższy tekst i wkleisz go do pliku o nazwie README.md w głównym folderze Twojego projektu.
-
-Markdown
 # Sklep z Komiksami - System Zarządzania Magazynem 🦸‍♂️📚
 
 Lokalna aplikacja webowa stworzona w celu zarządzania stanem magazynowym sklepu z komiksami. Pozwala na sprawdzanie dostępności produktów, dodawanie nowych komiksów, edycję istniejących oraz zarządzanie słownikami (autorzy, lokalizacje w sklepie). Posiada wbudowany system autoryzacji z podziałem na role.
