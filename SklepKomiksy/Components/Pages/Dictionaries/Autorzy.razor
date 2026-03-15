@@ -1,29 +1,34 @@
-﻿@page "/produkty/usun/{Id:long}"
-@using ComicStore.Models
-@using ComicStore.Services
+﻿@page "/autorzy"
+@using SklepKomiksy.Models
+@using SklepKomiksy.Services
 @attribute [Authorize(Roles = "Wlasciciel, Pracownik")]
 @inject ProduktService ProduktService
-@inject NavigationManager NavigationManager
 
-<h3>Usuń Komiks</h3>
-@if (produktDoUsuniecia == null)
+<h3>Zarządzanie Autorami</h3>
+<EditForm Model="nowyAutor" OnValidSubmit="ZapiszAutora" class="mb-4 p-3 border rounded">
+    <DataAnnotationsValidator />
+    <label>Imię:</label> <InputText @bind-Value="nowyAutor.Imie" class="form-control mb-2" />
+    <label>Nazwisko:</label> <InputText @bind-Value="nowyAutor.Nazwisko" class="form-control mb-2" />
+    <button type="submit" class="btn btn-primary">Dodaj Autora</button>
+</EditForm>
+
+@if (listaAutorow != null)
 {
-    <p><em>Ładowanie danych...</em></p>
-}
-else
-{
-    <div class="alert alert-danger">
-        <h4>Czy na pewno chcesz usunąć ten komiks?</h4><p>Tej operacji nie można cofnąć.</p><hr />
-        <p><strong>Tytuł:</strong> @produktDoUsuniecia.Tytul</p>
-        <p><strong>Ilość:</strong> @produktDoUsuniecia.Ilosc szt.</p>
-    </div>
-    <button @onclick="PotwierdzUsuniecie" class="btn btn-danger">Tak, usuń</button>
-    <a href="/produkty" class="btn btn-secondary ms-2">Anuluj</a>
+    <table class="table table-striped">
+        <thead><tr><th>ID</th><th>Imię</th><th>Nazwisko</th></tr></thead>
+        <tbody>
+            @foreach (var autor in listaAutorow)
+            {
+                <tr><td>@autor.Id</td><td>@autor.Imie</td><td>@autor.Nazwisko</td></tr>
+            }
+        </tbody>
+    </table>
 }
 
 @code {
-    [Parameter] public long Id { get; set; }
-    private Produkt? produktDoUsuniecia;
-    protected override async Task OnInitializedAsync() => produktDoUsuniecia = await ProduktService.PobierzProduktPoIdAsync(Id);
-    private async Task PotwierdzUsuniecie() { await ProduktService.UsunProduktAsync(Id); NavigationManager.NavigateTo("/produkty"); }
+    private Autor nowyAutor = new();
+    private List<Autor>? listaAutorow;
+    protected override async Task OnInitializedAsync() => await OdswiezListe();
+    private async Task ZapiszAutora() { await ProduktService.DodajAutoraAsync(nowyAutor); nowyAutor = new Autor(); await OdswiezListe(); }
+    private async Task OdswiezListe() => listaAutorow = await ProduktService.PobierzAutorowAsync();
 }

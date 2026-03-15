@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="SklepKomiksy.Tests/SklepKomiksy.Tests.csproj" Id="54d6664f-bd73-48d4-b37f-8cde91d9a051" />
   <Project Path="SklepKomiksy/SklepKomiksy.csproj" />
 </Solution>

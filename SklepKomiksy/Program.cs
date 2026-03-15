@@ -1,29 +1,45 @@
 using SklepKomiksy.Data;
+using SklepKomiksy.Models;
 using SklepKomiksy.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using SklepKomiksy.Data;
+using SklepKomiksy.Components;
+using SklepKomiksy.Components.Account;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-// Konfiguracja bazy MySQL
+// Konfiguracja bazy danych MySQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// Konfiguracja Identity z obs³ug¹ Ról
-builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
+// Nowy system uwierzytelniania w .NET 10
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+})
+    .AddIdentityCookies();
+
+// Rejestracja Identity z dodaniem ról
+builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddSignInManager()
+    .AddDefaultTokenProviders();
 
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
-builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<ApplicationUser>>();
+// Nowy format rejestracji Blazora
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
 
-// Rejestracja naszego serwisu
+// Nasz serwis
 builder.Services.AddScoped<ProduktService>();
 
 var app = builder.Build();
@@ -34,21 +50,21 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseExceptionHandler("/Error");
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseRouting();
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseAntiforgery(); // Wymagane w nowym Blazorze
 
-app.MapControllers();
-app.MapBlazorHub();
-app.MapFallbackToPage("/_Host");
+// Nowy sposób mapowania aplikacji Blazor
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
 
-// Uruchomienie Seedera przy starcie aplikacji
+app.MapAdditionalIdentityEndpoints();
+
+// Uruchomienie Seedera
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;

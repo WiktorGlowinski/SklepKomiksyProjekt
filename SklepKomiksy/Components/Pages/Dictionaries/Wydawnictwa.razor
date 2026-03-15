@@ -1,0 +1,76 @@
+﻿@page "/wydawnictwa"
+@using SklepKomiksy.Models
+@attribute [Authorize]
+@inject ProduktService ProduktService
+
+<h3>Zarządzanie Wydawnictwami</h3>
+<hr />
+
+<div class="row mb-4">
+    <div class="col-md-5">
+        <div class="input-group">
+            <input @bind="nowaNazwa" class="form-control" placeholder="Wpisz nazwę nowego wydawnictwa..." />
+            <button class="btn btn-success" @onclick="ZapiszWydawnictwo">Dodaj</button>
+        </div>
+    </div>
+</div>
+
+@if (lista == null)
+{
+    <p><em>Ładowanie...</em></p>
+}
+else
+{
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nazwa Wydawnictwa</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var element in lista)
+            {
+                <tr>
+                    <td>@element.Id</td>
+                    <td>@element.Nazwa</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" @onclick="() => Usun(element.Id)">Usuń</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Wydawnictwo>? lista;
+    private string nowaNazwa = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await OdswiezListe();
+    }
+
+    private async Task OdswiezListe()
+    {
+        lista = await ProduktService.PobierzWydawnictwaAsync();
+    }
+
+    private async Task ZapiszWydawnictwo()
+    {
+        if (!string.IsNullOrWhiteSpace(nowaNazwa))
+        {
+            await ProduktService.DodajWydawnictwoAsync(new Wydawnictwo { Nazwa = nowaNazwa });
+            nowaNazwa = "";
+            await OdswiezListe();
+        }
+    }
+
+    private async Task Usun(long id)
+    {
+        await ProduktService.UsunWydawnictwoAsync(id);
+        await OdswiezListe();
+    }
+}

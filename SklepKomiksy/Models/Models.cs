@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace ComicStore.Models
+namespace SklepKomiksy.Models
 {
     [Table("autorzy")]
     public class Autor

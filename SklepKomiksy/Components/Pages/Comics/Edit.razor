@@ -1,6 +1,6 @@
 ﻿@page "/produkty/edytuj/{Id:long}"
-@using ComicStore.Models
-@using ComicStore.Services
+@using SklepKomiksy.Models
+@using SklepKomiksy.Services
 @attribute [Authorize(Roles = "Wlasciciel, Pracownik")]
 @inject ProduktService ProduktService
 @inject NavigationManager NavigationManager

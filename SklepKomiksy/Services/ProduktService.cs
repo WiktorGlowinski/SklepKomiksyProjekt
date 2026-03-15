@@ -1,8 +1,10 @@
-﻿using ComicStore.Data;
-using ComicStore.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using SklepKomiksy.Data;
+using SklepKomiksy.Models;
+using System.Security.Cryptography;
+using System.Xml.Linq;
 
-namespace ComicStore.Services
+namespace SklepKomiksy.Services
 {
     public class ProduktService
     {
@@ -56,6 +58,40 @@ namespace ComicStore.Services
         {
             _context.Lokalizacje.Add(lokalizacja);
             await _context.SaveChangesAsync();
+        }
+// --- Metody dla Gatunków ---
+        public async Task DodajGatunekAsync(Gatunek gatunek)
+        {
+            _context.Gatunki.Add(gatunek);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UsunGatunekAsync(long id)
+        {
+            var gatunek = await _context.Gatunki.FindAsync(id);
+            if (gatunek != null)
+            {
+                _context.Gatunki.Remove(gatunek);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        // --- Metody dla Wydawnictw ---
+
+        public async Task DodajWydawnictwoAsync(Wydawnictwo wydawnictwo)
+        {
+            _context.Wydawnictwa.Add(wydawnictwo);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UsunWydawnictwoAsync(long id)
+        {
+            var wydawnictwo = await _context.Wydawnictwa.FindAsync(id);
+            if (wydawnictwo != null)
+            {
+                _context.Wydawnictwa.Remove(wydawnictwo);
+                await _context.SaveChangesAsync();
+            }
         }
     }
 }

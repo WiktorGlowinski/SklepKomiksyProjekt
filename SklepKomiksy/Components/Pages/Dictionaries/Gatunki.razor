@@ -1,0 +1,76 @@
+﻿@page "/gatunki"
+@using SklepKomiksy.Models
+@attribute [Authorize]
+@inject ProduktService ProduktService
+
+<h3>Zarządzanie Gatunkami</h3>
+<hr />
+
+<div class="row mb-4">
+    <div class="col-md-5">
+        <div class="input-group">
+            <input @bind="nowaNazwa" class="form-control" placeholder="Wpisz nazwę nowego gatunku..." />
+            <button class="btn btn-success" @onclick="ZapiszGatunek">Dodaj</button>
+        </div>
+    </div>
+</div>
+
+@if (lista == null)
+{
+    <p><em>Ładowanie...</em></p>
+}
+else
+{
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nazwa Gatunku</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var element in lista)
+            {
+                <tr>
+                    <td>@element.Id</td>
+                    <td>@element.Nazwa</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" @onclick="() => Usun(element.Id)">Usuń</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Gatunek>? lista;
+    private string nowaNazwa = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await OdswiezListe();
+    }
+
+    private async Task OdswiezListe()
+    {
+        lista = await ProduktService.PobierzGatunkiAsync();
+    }
+
+    private async Task ZapiszGatunek()
+    {
+        if (!string.IsNullOrWhiteSpace(nowaNazwa))
+        {
+            await ProduktService.DodajGatunekAsync(new Gatunek { Nazwa = nowaNazwa });
+            nowaNazwa = "";
+            await OdswiezListe();
+        }
+    }
+
+    private async Task Usun(long id)
+    {
+        await ProduktService.UsunGatunekAsync(id);
+        await OdswiezListe();
+    }
+}
