@@ -5,44 +5,68 @@
 <h3><i class="bi bi-box-seam"></i> Stan Magazynu</h3>
 <hr />
 
+<div class="row mb-3">
+    <div class="col-md-4">
+        <div class="input-group">
+            <span class="input-group-text bg-dark text-white"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" placeholder="Szukaj po tytule komiksu..." 
+                   @bind="WyszukiwanaFraza" @bind:event="oninput" />
+        </div>
+    </div>
+    <div class="col-md-8 d-flex align-items-center text-muted">
+        <small>Kliknij w nagłówki tabeli (Zeszyt, Wydawnictwo, Autorzy), aby posortować A-Z / Z-A.</small>
+    </div>
+</div>
+
 <div class="table-responsive">
     <table class="table table-striped table-hover align-middle">
         <thead class="table-dark">
             <tr>
                 <th>Tytuł</th>
-                <th>Zeszyt</th>
+                
+                <th @onclick="@(() => Sortuj("Zeszyt"))" style="cursor: pointer;" class="user-select-none">
+                    Zeszyt @WyswietlIkoneSortowania("Zeszyt")
+                </th>
+                
                 <th>ISBN</th>
                 <th>Cena</th>
                 <th>Ilość</th>
-                <th>Wydawnictwo</th>
+                
+                <th @onclick="@(() => Sortuj("Wydawnictwo"))" style="cursor: pointer;" class="user-select-none">
+                    Wydawnictwo @WyswietlIkoneSortowania("Wydawnictwo")
+                </th>
+                
                 <th>Kategoria</th>
                 <th>Lokalizacja</th>
-                <th>Autorzy</th>
+                
+                <th @onclick="@(() => Sortuj("Autorzy"))" style="cursor: pointer;" class="user-select-none">
+                    Autorzy @WyswietlIkoneSortowania("Autorzy")
+                </th>
+                
                 <th>Gatunki</th>
             </tr>
         </thead>
         <tbody>
             @if (komiksy == null)
             {
-                <tr>
-                    <td colspan="10" class="text-center"><em>Ładowanie magazynu...</em></td>
-                </tr>
+                <tr><td colspan="10" class="text-center"><em>Ładowanie magazynu...</em></td></tr>
             }
-            else if (!komiksy.Any())
+            else if (!WyswietlaneKomiksy.Any())
             {
-                <tr>
-                    <td colspan="10" class="text-center"><em>Brak komiksów w bazie. Dodaj pierwszy!</em></td>
-                </tr>
+                <tr><td colspan="10" class="text-center text-danger"><em>Brak wyników wyszukiwania.</em></td></tr>
             }
             else
             {
-                @foreach (var komiks in komiksy)
+                // Używamy naszej nowej, przefiltrowanej listy:
+                @foreach (var komiks in WyswietlaneKomiksy)
                 {
                     <tr>
                         <td class="fw-bold">@komiks.Tytul</td>
                         <td>@komiks.NumerZeszytu</td>
                         <td><small class="text-muted">@komiks.ISBN</small></td>
+                        
                         <td>@komiks.Cena.ToString("F2") zł</td>
+                        
                         <td>
                             <span class="badge @(komiks.Ilosc > 0 ? "bg-success" : "bg-danger")">
                                 @komiks.Ilosc szt.
@@ -51,9 +75,7 @@
                         <td>@PobierzNazweWydawnictwa(komiks.IdWydawnictwa)</td>
                         <td><span class="badge bg-secondary">@PobierzNazweKategorii(komiks.IdKategoriiWiekowej)</span></td>
                         <td>@PobierzNazweLokalizacji(komiks.IdLokalizacji)</td>
-                        
                         <td><small>@string.Join(", ", komiks.Autorzy.Select(a => $"{a.Imie} {a.Nazwisko}"))</small></td>
-                        
                         <td><small>@string.Join(", ", komiks.Gatunki.Select(g => g.Nazwa))</small></td>
                     </tr>
                 }
@@ -64,38 +86,89 @@
 
 @code {
     private List<Produkt>? komiksy;
-    
-    // Słowniki potrzebne do "przetłumaczenia" ID na nazwy
     private List<Wydawnictwo> wydawnictwa = new();
     private List<KategoriaWiekowa> kategorie = new();
     private List<Lokalizacja> lokalizacje = new();
 
+    // --- ZMIENNE DO WYSZUKIWANIA I SORTOWANIA ---
+    public string WyszukiwanaFraza { get; set; } = "";
+    private string aktualnaKolumnaSortowania = "";
+    private bool rosnaco = true;
+
+    // To jest "serce" operacji – lista generowana w locie na podstawie tego, co wpiszesz i klikniesz
+    private IEnumerable<Produkt> WyswietlaneKomiksy
+    {
+        get
+        {
+            if (komiksy == null) return Enumerable.Empty<Produkt>();
+
+            var wynik = komiksy.AsEnumerable();
+
+            // 1. Filtrowanie (Wyszukiwanie po tytule)
+            if (!string.IsNullOrWhiteSpace(WyszukiwanaFraza))
+            {
+                wynik = wynik.Where(k => k.Tytul.Contains(WyszukiwanaFraza, StringComparison.OrdinalIgnoreCase));
+            }
+
+            // 2. Sortowanie
+            switch (aktualnaKolumnaSortowania)
+            {
+                case "Zeszyt":
+                    wynik = rosnaco ? wynik.OrderBy(k => k.NumerZeszytu) : wynik.OrderByDescending(k => k.NumerZeszytu);
+                    break;
+                case "Wydawnictwo":
+                    wynik = rosnaco ? wynik.OrderBy(k => PobierzNazweWydawnictwa(k.IdWydawnictwa)) 
+                                    : wynik.OrderByDescending(k => PobierzNazweWydawnictwa(k.IdWydawnictwa));
+                    break;
+                case "Autorzy":
+                    // Sortujemy połączony tekst nazwisk autorów
+                    wynik = rosnaco ? wynik.OrderBy(k => string.Join("", k.Autorzy.Select(a => a.Nazwisko))) 
+                                    : wynik.OrderByDescending(k => string.Join("", k.Autorzy.Select(a => a.Nazwisko)));
+                    break;
+            }
+
+            return wynik;
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
-        // POBRANIE DANYCH (upewnij się, że nazwa metody z komiksami zgadza się z Twoim serwisem)
         komiksy = await ProduktService.PobierzKomiksyAsync();
-        
         wydawnictwa = await ProduktService.PobierzWydawnictwaAsync();
         kategorie = await ProduktService.PobierzKategorieWiekoweAsync();
         lokalizacje = await ProduktService.PobierzLokalizacjeAsync();
     }
 
-    // --- FUNKCJE POMOCNICZE DO TŁUMACZENIA ID NA TEKST ---
-
-    private string PobierzNazweWydawnictwa(int? id)
+    // --- METODY DO SORTOWANIA ---
+    private void Sortuj(string nazwaKolumny)
     {
-        return wydawnictwa.FirstOrDefault(w => w.Id == id)?.Nazwa ?? "---";
+        if (aktualnaKolumnaSortowania == nazwaKolumny)
+        {
+            // Jeśli klikamy w tę samą kolumnę, odwracamy kierunek sortowania
+            rosnaco = !rosnaco;
+        }
+        else
+        {
+            // Nowa kolumna = sortuj rosnąco
+            aktualnaKolumnaSortowania = nazwaKolumny;
+            rosnaco = true;
+        }
     }
 
-    private string PobierzNazweKategorii(int? id)
+    // Wyświetla ładne strzałki w nagłówkach
+    private string WyswietlIkoneSortowania(string nazwaKolumny)
     {
-        return kategorie.FirstOrDefault(k => k.Id == id)?.Nazwa ?? "---";
+        if (aktualnaKolumnaSortowania != nazwaKolumny) return "↕";
+        return rosnaco ? "↑" : "↓";
     }
 
+    // --- FUNKCJE POMOCNICZE (z poprzedniego kroku) ---
+    private string PobierzNazweWydawnictwa(int? id) => wydawnictwa.FirstOrDefault(w => w.Id == id)?.Nazwa ?? "---";
+    private string PobierzNazweKategorii(int? id) => kategorie.FirstOrDefault(k => k.Id == id)?.Nazwa ?? "---";
+    
     private string PobierzNazweLokalizacji(int? id)
     {
         var loc = lokalizacje.FirstOrDefault(l => l.Id == id);
-        if (loc == null) return "---";
-        return $"Regał: {loc.Regal}, Półka: {loc.Polka}";
+        return loc == null ? "---" : $"Regał: {loc.Regal}, Półka: {loc.Polka}";
     }
 }
