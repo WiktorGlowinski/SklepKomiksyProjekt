@@ -71,4 +71,21 @@ using (var scope = app.Services.CreateScope())
     await DbSeeder.SeedRolesAndAdminAsync(services);
 }
 
+app.MapPost("/api/zaloguj", async (HttpContext context, SignInManager<SklepKomiksy.Data.ApplicationUser> signInManager) =>
+{
+    var email = context.Request.Form["email"];
+    var haslo = context.Request.Form["password"];
+
+    var result = await signInManager.PasswordSignInAsync(email, haslo, isPersistent: false, lockoutOnFailure: false);
+
+    return result.Succeeded ? Results.Redirect("/") : Results.Redirect("/login?error=true");
+}).DisableAntiforgery();
+
+app.MapGet("/api/wyloguj", async (Microsoft.AspNetCore.Identity.SignInManager<SklepKomiksy.Data.ApplicationUser> signInManager) =>
+{
+    await signInManager.SignOutAsync();
+    return Microsoft.AspNetCore.Http.Results.Redirect("/");
+});
+
+
 app.Run();

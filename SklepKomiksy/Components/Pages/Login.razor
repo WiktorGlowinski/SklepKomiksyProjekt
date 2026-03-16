@@ -4,60 +4,34 @@
 @using SklepKomiksy.Data
 @inject SignInManager<ApplicationUser> SignInManager
 @inject NavigationManager NavigationManager
-
 <h3>Logowanie do Systemu</h3>
 <hr />
 
 <div class="row">
     <div class="col-md-4">
-        <EditForm Model="Input" OnValidSubmit="ZalogujUzytkownika" method="post" FormName="LogowanieForm">
-            <DataAnnotationsValidator />
+        <form action="/api/zaloguj" method="post">
+            <AntiforgeryToken />
             
-            @if (PokazBlad)
+            @if (Error == true)
             {
                 <div class="alert alert-danger">Błędny email lub hasło!</div>
             }
 
             <div class="mb-3">
                 <label>Email:</label>
-                <InputText @bind-Value="Input.Email" class="form-control" />
+                <input type="text" name="email" class="form-control" required />
             </div>
             <div class="mb-3">
                 <label>Hasło:</label>
-                <InputText @bind-Value="Input.Password" type="password" class="form-control" />
+                <input type="password" name="password" class="form-control" required />
             </div>
             
             <button type="submit" class="btn btn-primary w-100">Zaloguj</button>
-        </EditForm>
+        </form>
     </div>
 </div>
 
 @code {
-    [SupplyParameterFromForm]
-    private LoginModel Input { get; set; } = new();
-
-    private bool PokazBlad = false;
-
-    private async Task ZalogujUzytkownika()
-    {
-        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, false, lockoutOnFailure: false);
-        if (result.Succeeded)
-        {
-            // Przeładowanie strony z nowym ciasteczkiem sesji
-            NavigationManager.NavigateTo("/", true);
-        }
-        else
-        {
-            PokazBlad = true;
-        }
-    }
-
-    public class LoginModel
-    {
-        [Required(ErrorMessage = "Email jest wymagany.")]
-        public string Email { get; set; } = "";
-        
-        [Required(ErrorMessage = "Hasło jest wymagane.")]
-        public string Password { get; set; } = "";
-    }
+    [SupplyParameterFromQuery(Name = "error")]
+    public bool? Error { get; set; }
 }

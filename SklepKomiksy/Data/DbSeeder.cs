@@ -28,6 +28,16 @@ namespace SklepKomiksy.Data
                 await userManager.CreateAsync(adminUser, "Szef123!");
                 await userManager.AddToRoleAsync(adminUser, "Wlasciciel");
             }
+            var pracownikEmail = "pracownik@sklep.pl";
+            var pracownikUser = await userManager.FindByEmailAsync(pracownikEmail);
+
+            if (pracownikUser == null)
+            {
+                pracownikUser = new ApplicationUser { UserName = pracownikEmail, Email = pracownikEmail, EmailConfirmed = true };
+                // Uwaga: Hasło musi mieć dużą literę, cyfrę i znak specjalny
+                await userManager.CreateAsync(pracownikUser, "Pracownik123!");
+                await userManager.AddToRoleAsync(pracownikUser, "Pracownik");
+            }
         }
     }
 }

@@ -26,11 +26,6 @@
 </AuthorizeView>
 <AuthorizeView>
     <Authorized>
-        <div class="nav-item px-3 mt-4">
-            <NavLink class="nav-link text-warning" href="logout">
-                <span class="bi bi-box-arrow-right-nav-menu" aria-hidden="true"></span> Wyloguj Szefa
-            </NavLink>
-        </div>
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="gatunki">
                 <span class="bi bi-tags-nav-menu" aria-hidden="true"></span> Gatunki
@@ -41,6 +36,15 @@
                 <span class="bi bi-building-nav-menu" aria-hidden="true"></span> Wydawnictwa
             </NavLink>
         </div>
+        </Authorized>
+        </AuthorizeView>
+<AuthorizeView>
+    <Authorized>
+        <div class="nav-item px-3 mt-4">
+            <a class="nav-link text-warning" href="/api/wyloguj" target="_top">
+                <span class="bi bi-box-arrow-right-nav-menu" aria-hidden="true"></span> Wyloguj
+            </a>
+        </div>
     </Authorized>
     <NotAuthorized>
         <div class="nav-item px-3 mt-4">
@@ -50,3 +54,4 @@
         </div>
     </NotAuthorized>
 </AuthorizeView>
+        
