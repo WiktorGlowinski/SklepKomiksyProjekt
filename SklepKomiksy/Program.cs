@@ -87,5 +87,4 @@ app.MapGet("/api/wyloguj", async (Microsoft.AspNetCore.Identity.SignInManager<Sk
     return Microsoft.AspNetCore.Http.Results.Redirect("/");
 });
 
-
 app.Run();

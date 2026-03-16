@@ -9,6 +9,7 @@ namespace SklepKomiksy.Models
         [Key][Column("id_autora")] public long Id { get; set; }
         [Column("imie")] public string Imie { get; set; } = string.Empty;
         [Column("nazwisko")] public string Nazwisko { get; set; } = string.Empty;
+        public List<Produkt> Produkty { get; set; } = new();
     }
 
     [Table("gatunki")]
@@ -16,14 +17,16 @@ namespace SklepKomiksy.Models
     {
         [Key][Column("id_gatunku")] public long Id { get; set; }
         [Column("gatunek")] public string Nazwa { get; set; } = string.Empty;
+        public List<Produkt> Produkty { get; set; } = new();
     }
 
     [Table("kategorie_wiekowe")]
     public class KategoriaWiekowa
     {
-        [Key][Column("id_kategorii")] public long Id { get; set; }
-        [Column("18+")] public bool? OsiemnasciePlus { get; set; }
-    }
+  
+            [Key][Column("id_kategorii")] public long Id { get; set; }
+            [Column("nazwa")] public string Nazwa { get; set; } = string.Empty;
+        }
 
     [Table("lokalizacje")]
     public class Lokalizacja
@@ -43,6 +46,11 @@ namespace SklepKomiksy.Models
     [Table("produkty")]
     public class Produkt
     {
+    
+       
+            public List<Autor> Autorzy { get; set; } = new();
+            public List<Gatunek> Gatunki { get; set; } = new();
+      
         [Key][Column("id_produktu")] public long Id { get; set; }
         [Column("tytul")] public string Tytul { get; set; } = string.Empty;
         [Column("numer_zeszytu")] public int? NumerZeszytu { get; set; }

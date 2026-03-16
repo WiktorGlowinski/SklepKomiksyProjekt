@@ -1,63 +1,101 @@
-﻿@page "/produkty"
+﻿@page "/produkty" 
 @using SklepKomiksy.Models
-@using SklepKomiksy.Services
-@inject ProduktService ProduktService
+@inject SklepKomiksy.Services.ProduktService ProduktService
 
-<h3>Stan Magazynu Komiksów</h3>
+<h3><i class="bi bi-box-seam"></i> Stan Magazynu</h3>
+<hr />
 
-@if (produkty == null)
-{
-    <p><em>Ładowanie stanu magazynu...</em></p>
-}
-else
-{
-    <table class="table table-hover">
-        <thead>
+<div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+        <thead class="table-dark">
             <tr>
                 <th>Tytuł</th>
-                <th>Zeszyt nr</th>
+                <th>Zeszyt</th>
                 <th>ISBN</th>
                 <th>Cena</th>
                 <th>Ilość</th>
-                <AuthorizeView Roles="Wlasciciel, Pracownik">
-                    <Authorized><th>Akcje</th></Authorized>
-                </AuthorizeView>
+                <th>Wydawnictwo</th>
+                <th>Kategoria</th>
+                <th>Lokalizacja</th>
+                <th>Autorzy</th>
+                <th>Gatunki</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var p in produkty)
+            @if (komiksy == null)
             {
                 <tr>
-                    <td>@p.Tytul</td>
-                    <td>@(p.NumerZeszytu?.ToString() ?? "-")</td>
-                    <td>@(p.ISBN ?? "-")</td>
-                    <td>@p.Cena zł</td>
-                    <td>
-                        @if (p.Ilosc > 0)
-                        {
-                            <span class="text-success fw-bold">@p.Ilosc szt.</span>
-                        }
-                        else
-                        {
-
-                            <span class="text-danger fw-bold">Brak</span>
-                        }
-                    </td>
-                    <AuthorizeView Roles="Wlasciciel, Pracownik">
-                        <Authorized>
-                            <td>
-                                <a href="/produkty/edytuj/@p.Id" class="btn btn-sm btn-warning">Edytuj</a>
-                                <a href="/produkty/usun/@p.Id" class="btn btn-sm btn-danger">Usuń</a>
-                            </td>
-                        </Authorized>
-                    </AuthorizeView>
+                    <td colspan="10" class="text-center"><em>Ładowanie magazynu...</em></td>
                 </tr>
+            }
+            else if (!komiksy.Any())
+            {
+                <tr>
+                    <td colspan="10" class="text-center"><em>Brak komiksów w bazie. Dodaj pierwszy!</em></td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var komiks in komiksy)
+                {
+                    <tr>
+                        <td class="fw-bold">@komiks.Tytul</td>
+                        <td>@komiks.NumerZeszytu</td>
+                        <td><small class="text-muted">@komiks.ISBN</small></td>
+                        <td>@komiks.Cena.ToString("F2") zł</td>
+                        <td>
+                            <span class="badge @(komiks.Ilosc > 0 ? "bg-success" : "bg-danger")">
+                                @komiks.Ilosc szt.
+                            </span>
+                        </td>
+                        <td>@PobierzNazweWydawnictwa(komiks.IdWydawnictwa)</td>
+                        <td><span class="badge bg-secondary">@PobierzNazweKategorii(komiks.IdKategoriiWiekowej)</span></td>
+                        <td>@PobierzNazweLokalizacji(komiks.IdLokalizacji)</td>
+                        
+                        <td><small>@string.Join(", ", komiks.Autorzy.Select(a => $"{a.Imie} {a.Nazwisko}"))</small></td>
+                        
+                        <td><small>@string.Join(", ", komiks.Gatunki.Select(g => g.Nazwa))</small></td>
+                    </tr>
+                }
             }
         </tbody>
     </table>
-}
+</div>
 
 @code {
-    private List<Produkt>? produkty;
-    protected override async Task OnInitializedAsync() => produkty = await ProduktService.PobierzWszystkieProduktyAsync();
+    private List<Produkt>? komiksy;
+    
+    // Słowniki potrzebne do "przetłumaczenia" ID na nazwy
+    private List<Wydawnictwo> wydawnictwa = new();
+    private List<KategoriaWiekowa> kategorie = new();
+    private List<Lokalizacja> lokalizacje = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // POBRANIE DANYCH (upewnij się, że nazwa metody z komiksami zgadza się z Twoim serwisem)
+        komiksy = await ProduktService.PobierzKomiksyAsync();
+        
+        wydawnictwa = await ProduktService.PobierzWydawnictwaAsync();
+        kategorie = await ProduktService.PobierzKategorieWiekoweAsync();
+        lokalizacje = await ProduktService.PobierzLokalizacjeAsync();
+    }
+
+    // --- FUNKCJE POMOCNICZE DO TŁUMACZENIA ID NA TEKST ---
+
+    private string PobierzNazweWydawnictwa(int? id)
+    {
+        return wydawnictwa.FirstOrDefault(w => w.Id == id)?.Nazwa ?? "---";
+    }
+
+    private string PobierzNazweKategorii(int? id)
+    {
+        return kategorie.FirstOrDefault(k => k.Id == id)?.Nazwa ?? "---";
+    }
+
+    private string PobierzNazweLokalizacji(int? id)
+    {
+        var loc = lokalizacje.FirstOrDefault(l => l.Id == id);
+        if (loc == null) return "---";
+        return $"Regał: {loc.Regal}, Półka: {loc.Polka}";
+    }
 }

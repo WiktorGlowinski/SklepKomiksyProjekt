@@ -30,6 +30,15 @@ namespace SklepKomiksy.Services
             _context.Produkty.Update(produkt);
             await _context.SaveChangesAsync();
         }
+        public async Task<List<Lokalizacja>> PobierzLokalizacjeAsync()
+        {
+            return await _context.Lokalizacje.ToListAsync();
+        }
+
+        public async Task<List<KategoriaWiekowa>> PobierzKategorieWiekoweAsync()
+        {
+            return await _context.KategorieWiekowe.ToListAsync();
+        }
 
         public async Task UsunProduktAsync(long id)
         {
@@ -45,8 +54,7 @@ namespace SklepKomiksy.Services
         public async Task<List<Autor>> PobierzAutorowAsync() => await _context.Autorzy.ToListAsync();
         public async Task<List<Wydawnictwo>> PobierzWydawnictwaAsync() => await _context.Wydawnictwa.ToListAsync();
         public async Task<List<Gatunek>> PobierzGatunkiAsync() => await _context.Gatunki.ToListAsync();
-        public async Task<List<KategoriaWiekowa>> PobierzKategorieWiekoweAsync() => await _context.KategorieWiekowe.ToListAsync();
-        public async Task<List<Lokalizacja>> PobierzLokalizacjeAsync() => await _context.Lokalizacje.ToListAsync();
+       
 
         public async Task DodajAutoraAsync(Autor autor)
         {
@@ -65,7 +73,20 @@ namespace SklepKomiksy.Services
             _context.Gatunki.Add(gatunek);
             await _context.SaveChangesAsync();
         }
-
+        public async Task InicjalizujKategorieWiekoweAsync()
+        {
+            // Jeśli tabela kategorii w bazie jest pusta, system sam doda te 4 podstawowe opcje
+            if (!_context.KategorieWiekowe.Any())
+            {
+                _context.KategorieWiekowe.AddRange(
+                    new KategoriaWiekowa { Nazwa = "familijne" },
+                    new KategoriaWiekowa { Nazwa = "12+" },
+                    new KategoriaWiekowa { Nazwa = "16+" },
+                    new KategoriaWiekowa { Nazwa = "18+" }
+                );
+                await _context.SaveChangesAsync();
+            }
+        }
         public async Task UsunGatunekAsync(long id)
         {
             var gatunek = await _context.Gatunki.FindAsync(id);
@@ -74,6 +95,36 @@ namespace SklepKomiksy.Services
                 _context.Gatunki.Remove(gatunek);
                 await _context.SaveChangesAsync();
             }
+        }
+        public async Task DodajKomiksAsync(Produkt komiks, long[] wybraneAutorzyId, long[] wybraneGatunkiId)
+        {
+            // 1. Zabezpieczenie przed błędem ReadOnlySpan w .NET 8 - zamieniamy tablice na proste listy
+            var listaAutorowId = wybraneAutorzyId.ToList();
+            var listaGatunkowId = wybraneGatunkiId.ToList();
+
+            // 2. Szukamy w bazie za pomocą zwykłych list
+            var autorzyDB = await _context.Autorzy
+                .Where(a => listaAutorowId.Contains(a.Id))
+                .ToListAsync();
+
+            var gatunkiDB = await _context.Gatunki
+                .Where(g => listaGatunkowId.Contains(g.Id))
+                .ToListAsync();
+
+            // 3. Przypinamy relacje do komiksu
+            komiks.Autorzy = autorzyDB;
+            komiks.Gatunki = gatunkiDB;
+
+            // 4. Zapisujemy w bazie
+            _context.Produkty.Add(komiks);
+            await _context.SaveChangesAsync();
+        }
+        public async Task<List<Produkt>> PobierzKomiksyAsync() // <-- użyj swojej nazwy metody
+        {
+            return await _context.Produkty
+                .Include(p => p.Autorzy)
+                .Include(p => p.Gatunki)
+                .ToListAsync();
         }
 
         // --- Metody dla Wydawnictw ---
@@ -92,6 +143,7 @@ namespace SklepKomiksy.Services
                 _context.Wydawnictwa.Remove(wydawnictwo);
                 await _context.SaveChangesAsync();
             }
+
         }
     }
 }

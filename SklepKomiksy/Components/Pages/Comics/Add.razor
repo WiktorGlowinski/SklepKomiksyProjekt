@@ -1,82 +1,171 @@
-﻿@page "/produkty/dodaj"
+﻿@page "/add"
+@attribute [Authorize]
 @using SklepKomiksy.Models
-@attribute [Authorize(Roles = "Wlasciciel, Pracownik")]
-@inject ProduktService ProduktService
-@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Components.Forms
+@inject SklepKomiksy.Services.ProduktService ProduktService
+@inject NavigationManager Navigation
 
-<h3>Dodaj Nowy Komiks</h3>
-@if (isLoading)
-{
-    <p><em>Ładowanie formularza...</em></p>
-}
-else
-{
-    <EditForm Model="nowyProdukt" OnValidSubmit="ZapiszProdukt">
-        <DataAnnotationsValidator />
-        <div class="row mb-3">
-            <div class="col-md-6"><label>Tytuł:</label><InputText class="form-control" @bind-Value="nowyProdukt.Tytul" /></div>
-            <div class="col-md-3"><label>Numer zeszytu:</label><InputNumber class="form-control" @bind-Value="nowyProdukt.NumerZeszytu" /></div>
-            <div class="col-md-3"><label>ISBN:</label><InputText class="form-control" @bind-Value="nowyProdukt.ISBN" /></div>
+<h3>Dodaj Nowy Komiks do Magazynu</h3>
+<hr />
+
+<EditForm Model="nowyKomiks" OnValidSubmit="ZapiszKomiks">
+    <div class="row">
+        
+        <div class="col-md-6">
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold">Tytuł komiksu:</label>
+                <InputText @bind-Value="nowyKomiks.Tytul" class="form-control" />
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Numer ISBN:</label>
+                    <InputText @bind-Value="nowyKomiks.ISBN" class="form-control" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Cena (zł):</label>
+                    <InputNumber @bind-Value="nowyKomiks.Cena" class="form-control" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Ilość w magazynie:</label>
+                    <InputNumber @bind-Value="nowyKomiks.Ilosc" class="form-control" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Numer zeszytu:</label>
+                    <InputNumber @bind-Value="nowyKomiks.NumerZeszytu" class="form-control" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Wydawnictwo:</label>
+                <InputSelect TValue="int?" @bind-Value="nowyKomiks.IdWydawnictwa" class="form-select">
+                    <option value="">-- Wybierz Wydawnictwo --</option>
+                    @foreach (var wyd in dostepneWydawnictwa)
+                    {
+                        <option value="@wyd.Id">@wyd.Nazwa</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Kategoria Wiekowa:</label>
+                <InputSelect TValue="int?" @bind-Value="nowyKomiks.IdKategoriiWiekowej" class="form-select">
+                    <option value="">-- Wybierz Kategorię --</option>
+                    @foreach (var kat in dostepneKategorie)
+                    {
+                        <option value="@kat.Id">@kat.Nazwa</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Lokalizacja w magazynie:</label>
+                <InputSelect TValue="int?" @bind-Value="nowyKomiks.IdLokalizacji" class="form-select">
+                    <option value="">-- Wybierz Regał i Półkę --</option>
+                    @foreach (var lok in dostepneLokalizacje)
+                    {
+                        <option value="@lok.Id">Regał: @lok.Regal, Półka: @lok.Polka</option>
+                    }
+                </InputSelect>
+            </div>
+            
+            <button type="submit" class="btn btn-success mt-4 w-100 fs-5">
+                <i class="bi bi-save"></i> Zapisz Komiks w Bazie
+            </button>
+            
         </div>
-        <div class="row mb-3">
-            <div class="col-md-4"><label>Cena (zł):</label><InputNumber class="form-control" @bind-Value="nowyProdukt.Cena" /></div>
-            <div class="col-md-4"><label>Ilość:</label><InputNumber class="form-control" @bind-Value="nowyProdukt.Ilosc" /></div>
-            <div class="col-md-4">
-                <label>Autor:</label><InputSelect class="form-select" @bind-Value="nowyProdukt.IdAutora">
-                <option value="">-- Wybierz Autora --</option>
-                @foreach (var a in autorzy)
-                {
-                    <option value="@a.Id">@a.Imie @a.Nazwisko</option>
-                }
-            </InputSelect>
+
+        <div class="col-md-6">
+            
+            <div class="card mb-3">
+                <div class="card-header bg-dark text-white">Wybierz Autorów</div>
+                <div class="card-body" style="max-height: 200px; overflow-y: auto;">
+                    @if (dostepniAutorzy != null)
+                    {
+                        @foreach (var autor in dostepniAutorzy)
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="autor_@autor.Id"
+                                       @onchange="@(e => ZaznaczAutora(autor.Id, e.Value))" />
+                                <label class="form-check-label" for="autor_@autor.Id">
+                                    @autor.Imie @autor.Nazwisko
+                                </label>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-dark text-white">Wybierz Gatunki</div>
+                <div class="card-body" style="max-height: 200px; overflow-y: auto;">
+                    @if (dostepniGatunki != null)
+                    {
+                        @foreach (var gatunek in dostepniGatunki)
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="gatunek_@gatunek.Id"
+                                       @onchange="@(e => ZaznaczGatunek(gatunek.Id, e.Value))" />
+                                <label class="form-check-label" for="gatunek_@gatunek.Id">
+                                    @gatunek.Nazwa
+                                </label>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
         </div>
     </div>
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <label>Wydawnictwo:</label><InputSelect class="form-select" @bind-Value="nowyProdukt.IdWydawnictwa">
-            <option value="">-- Wybierz --</option>
-            @foreach (var w in wydawnictwa)
-            {
-                <option value="@w.Id">@w.Nazwa</option>
-            }
-        </InputSelect>
-    </div>
-    <div class="col-md-4">
-        <label>Gatunek:</label><InputSelect class="form-select" @bind-Value="nowyProdukt.IdGatunku">
-        <option value="">-- Wybierz --</option>
-        @foreach (var g in gatunki)
-        {
-            <option value="@g.Id">@g.Nazwa</option>
-        }
-    </InputSelect>
-</div>
-<div class="col-md-4">
-    <label>Lokalizacja:</label><InputSelect class="form-select" @bind-Value="nowyProdukt.IdLokalizacji">
-    <option value="">-- Wybierz --</option>
-    @foreach (var l in lokalizacje)
-    {
-        <option value="@l.Id">@l.Regal - Półka @l.Polka</option>
-    }
-</InputSelect>
-</div>
-</div>
-<button type="submit" class="btn btn-success mt-3">Dodaj</button>
-<a href="/produkty" class="btn btn-secondary mt-3 ms-2">Anuluj</a>
 </EditForm>
-}
 
 @code {
-    private Produkt nowyProdukt = new();
-    private bool isLoading = true;
-    private List<Autor> autorzy = new(); private List<Wydawnictwo> wydawnictwa = new();
-    private List<Gatunek> gatunki = new(); private List<Lokalizacja> lokalizacje = new();
+    private Produkt nowyKomiks = new();
+    
+    private List<Autor> dostepniAutorzy = new();
+    private List<Gatunek> dostepniGatunki = new();
+    private List<Wydawnictwo> dostepneWydawnictwa = new();
+    private List<KategoriaWiekowa> dostepneKategorie = new();
+    private List<Lokalizacja> dostepneLokalizacje = new();
+    
+    private List<long> wybraneAutorzyId = new();
+    private List<long> wybraneGatunkiId = new();
 
     protected override async Task OnInitializedAsync()
     {
-        autorzy = await ProduktService.PobierzAutorowAsync(); wydawnictwa = await ProduktService.PobierzWydawnictwaAsync();
-        gatunki = await ProduktService.PobierzGatunkiAsync(); lokalizacje = await ProduktService.PobierzLokalizacjeAsync();
-        isLoading = false;
+        // Sprawdzenie i ewentualne dodanie kategorii wiekowych z automatu
+        await ProduktService.InicjalizujKategorieWiekoweAsync();
+
+        dostepniAutorzy = await ProduktService.PobierzAutorowAsync();
+        dostepniGatunki = await ProduktService.PobierzGatunkiAsync();
+        dostepneWydawnictwa = await ProduktService.PobierzWydawnictwaAsync();
+        dostepneKategorie = await ProduktService.PobierzKategorieWiekoweAsync();
+        dostepneLokalizacje = await ProduktService.PobierzLokalizacjeAsync();
     }
 
-    private async Task ZapiszProdukt() { await ProduktService.DodajProduktAsync(nowyProdukt); NavigationManager.NavigateTo("/produkty"); }
+    private void ZaznaczAutora(long id, object? zaznaczony)
+    {
+        if (zaznaczony is bool isChecked && isChecked)
+            wybraneAutorzyId.Add(id);
+        else
+            wybraneAutorzyId.Remove(id);
+    }
+
+    private void ZaznaczGatunek(long id, object? zaznaczony)
+    {
+        if (zaznaczony is bool isChecked && isChecked)
+            wybraneGatunkiId.Add(id);
+        else
+            wybraneGatunkiId.Remove(id);
+    }
+
+    private async Task ZapiszKomiks()
+    {
+        await ProduktService.DodajKomiksAsync(nowyKomiks, wybraneAutorzyId.ToArray(), wybraneGatunkiId.ToArray());
+        Navigation.NavigateTo("/");
+    }
 }

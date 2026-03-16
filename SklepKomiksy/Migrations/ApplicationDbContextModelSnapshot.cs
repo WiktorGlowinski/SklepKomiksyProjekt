@@ -22,6 +22,36 @@ namespace SklepKomiksy.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("AutorProdukt", b =>
+                {
+                    b.Property<long>("AutorzyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ProduktyId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("AutorzyId", "ProduktyId");
+
+                    b.HasIndex("ProduktyId");
+
+                    b.ToTable("AutorProdukt");
+                });
+
+            modelBuilder.Entity("GatunekProdukt", b =>
+                {
+                    b.Property<long>("GatunkiId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ProduktyId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("GatunkiId", "ProduktyId");
+
+                    b.HasIndex("ProduktyId");
+
+                    b.ToTable("GatunekProdukt");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -270,9 +300,10 @@ namespace SklepKomiksy.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<bool?>("OsiemnasciePlus")
-                        .HasColumnType("tinyint(1)")
-                        .HasColumnName("18+");
+                    b.Property<string>("Nazwa")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("nazwa");
 
                     b.HasKey("Id");
 
@@ -373,6 +404,36 @@ namespace SklepKomiksy.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("wydawnictwa");
+                });
+
+            modelBuilder.Entity("AutorProdukt", b =>
+                {
+                    b.HasOne("SklepKomiksy.Models.Autor", null)
+                        .WithMany()
+                        .HasForeignKey("AutorzyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SklepKomiksy.Models.Produkt", null)
+                        .WithMany()
+                        .HasForeignKey("ProduktyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GatunekProdukt", b =>
+                {
+                    b.HasOne("SklepKomiksy.Models.Gatunek", null)
+                        .WithMany()
+                        .HasForeignKey("GatunkiId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SklepKomiksy.Models.Produkt", null)
+                        .WithMany()
+                        .HasForeignKey("ProduktyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
