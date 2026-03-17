@@ -1,10 +1,10 @@
 # SklepKomiksyProjekt
 
-# Sklep z Komiksami - System Zarządzania Magazynem 🦸‍♂️📚
+# Sklep z Komiksami - System Zarządzania Magazynem
 
 Lokalna aplikacja webowa stworzona w celu zarządzania stanem magazynowym sklepu z komiksami. Pozwala na sprawdzanie dostępności produktów, dodawanie nowych komiksów, edycję istniejących oraz zarządzanie słownikami (autorzy, lokalizacje w sklepie). Posiada wbudowany system autoryzacji z podziałem na role.
 
-## 🚀 Główne funkcjonalności
+## Główne funkcjonalności
 
 * **Dla Gości (Niezalogowanych):**
   * Przeglądanie aktualnego stanu magazynowego komiksów (tytuł, zeszyt, cena, dostępność).
@@ -16,7 +16,7 @@ Lokalna aplikacja webowa stworzona w celu zarządzania stanem magazynowym sklepu
   * Autoryzacja dostępu do widoków i operacji na podstawie ról (`Wlasciciel`, `Pracownik`).
   * Automatyczny seeder tworzący role i domyślne konto administratora przy pierwszym uruchomieniu.
 
-## 🛠️ Użyte Technologie
+##  Użyte Technologie
 
 * **Framework:** .NET 10.0
 * **Frontend:** Blazor Web App (Server-side rendering / Interactive Global)
@@ -25,7 +25,7 @@ Lokalna aplikacja webowa stworzona w celu zarządzania stanem magazynowym sklepu
 * **Autoryzacja:** ASP.NET Core Identity
 * **Testy Automatyczne:** xUnit + EF Core InMemory Database
 
-## ⚙️ Wymagania Wstępne
+## Wymagania Wstępne
 
 Aby uruchomić projekt na swoim komputerze, będziesz potrzebować:
 * [Visual Studio 2022](https://visualstudio.microsoft.com/) (z zainstalowanym workloadem "ASP.NET and web development").
