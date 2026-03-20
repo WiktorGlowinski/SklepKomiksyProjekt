@@ -22,7 +22,9 @@
     <table class="table table-striped table-hover align-middle">
         <thead class="table-dark">
             <tr>
-                <th>Tytuł</th>
+                <th @onclick="@(() => Sortuj("Tytul"))" style="cursor: pointer;" class="user-select-none">
+                    Tytuł @WyswietlIkoneSortowania("Tytul")
+                </th>
                 
                 <th @onclick="@(() => Sortuj("Zeszyt"))" style="cursor: pointer;" class="user-select-none">
                     Zeszyt @WyswietlIkoneSortowania("Zeszyt")
@@ -44,16 +46,20 @@
                 </th>
                 
                 <th>Gatunki</th>
+                
+                <AuthorizeView Roles="Wlasciciel">
+                    <th>Akcje</th>
+                </AuthorizeView>
             </tr>
         </thead>
         <tbody>
             @if (komiksy == null)
             {
-                <tr><td colspan="10" class="text-center"><em>Ładowanie magazynu...</em></td></tr>
+                <tr><td colspan="11" class="text-center"><em>Ładowanie magazynu...</em></td></tr>
             }
             else if (!WyswietlaneKomiksy.Any())
             {
-                <tr><td colspan="10" class="text-center text-danger"><em>Brak wyników wyszukiwania.</em></td></tr>
+                <tr><td colspan="11" class="text-center text-danger"><em>Brak wyników wyszukiwania.</em></td></tr>
             }
             else
             {
@@ -68,15 +74,44 @@
                         <td>@komiks.Cena.ToString("F2") zł</td>
                         
                         <td>
-                            <span class="badge @(komiks.Ilosc > 0 ? "bg-success" : "bg-danger")">
-                                @komiks.Ilosc szt.
-                            </span>
+                            <div class="d-flex align-items-center">
+                                <button class="btn btn-sm btn-outline-danger me-1" @onclick="@(() => ZmienIlosc(komiks.Id, -1))"><b>-</b></button>
+                                <span class="badge @(komiks.Ilosc > 0 ? "bg-success" : "bg-danger")" style="width: 50px;">
+                                    @komiks.Ilosc szt.
+                                </span>
+                                <button class="btn btn-sm btn-outline-success ms-1" @onclick="@(() => ZmienIlosc(komiks.Id, 1))"><b>+</b></button>
+                            </div>
                         </td>
+
                         <td>@PobierzNazweWydawnictwa(komiks.IdWydawnictwa)</td>
                         <td><span class="badge bg-secondary">@PobierzNazweKategorii(komiks.IdKategoriiWiekowej)</span></td>
-                        <td>@PobierzNazweLokalizacji(komiks.IdLokalizacji)</td>
+                
+                        <td>
+                            <select class="form-select form-select-sm" value="@komiks.IdLokalizacji"
+                                    @onchange="@((ChangeEventArgs e) => ZmienLokalizacje(komiks.Id, e.Value))">
+                                <option value="">-- Brak --</option>
+                                @if (lokalizacje != null)
+                                {
+                                    @foreach (var lok in lokalizacje)
+                                    {
+                                        <option value="@lok.Id">Regał: @lok.Regal, Półka: @lok.Polka</option>
+                                    }
+                                }
+                            </select>
+                        </td>
+
                         <td><small>@string.Join(", ", komiks.Autorzy.Select(a => $"{a.Imie} {a.Nazwisko}"))</small></td>
                         <td><small>@string.Join(", ", komiks.Gatunki.Select(g => g.Nazwa))</small></td>
+
+                        <AuthorizeView Roles="Wlasciciel" Context="authContext">
+                            <Authorized>
+                                <td>
+                                    <button class="btn btn-sm btn-danger" @onclick="@(() => UsunKomiks(komiks.Id))">
+                                        <i class="bi bi-trash"></i> Usuń
+                                    </button>
+                                </td>
+                            </Authorized>
+                        </AuthorizeView>
                     </tr>
                 }
             }
@@ -113,6 +148,9 @@
             // 2. Sortowanie
             switch (aktualnaKolumnaSortowania)
             {
+                case "Tytul":
+                    wynik = rosnaco ? wynik.OrderBy(k => k.Tytul) : wynik.OrderByDescending(k => k.Tytul);
+                    break;
                 case "Zeszyt":
                     wynik = rosnaco ? wynik.OrderBy(k => k.NumerZeszytu) : wynik.OrderByDescending(k => k.NumerZeszytu);
                     break;
@@ -162,6 +200,28 @@
         return rosnaco ? "↑" : "↓";
     }
 
+    private async Task ZmienIlosc(long id, int zmiana)
+    {
+        await ProduktService.ZmienIloscAsync(id, zmiana);
+        komiksy = await ProduktService.PobierzKomiksyAsync();
+    }
+
+    private async Task ZmienLokalizacje(long komiksId, object? nowaWartosc)
+    {
+        int? noweId = null;
+        if (nowaWartosc != null && int.TryParse(nowaWartosc.ToString(), out int parsedId))
+        {
+            noweId = parsedId;
+        }
+        await ProduktService.ZmienLokalizacjeAsync(komiksId, noweId);
+        komiksy = await ProduktService.PobierzKomiksyAsync();
+    }
+
+    private async Task UsunKomiks(long id)
+    {
+        await ProduktService.UsunKomiksAsync(id);
+        komiksy = await ProduktService.PobierzKomiksyAsync();
+    }
     // --- FUNKCJE POMOCNICZE (z poprzedniego kroku) ---
     private string PobierzNazweWydawnictwa(int? id) => wydawnictwa.FirstOrDefault(w => w.Id == id)?.Nazwa ?? "---";
     private string PobierzNazweKategorii(int? id) => kategorie.FirstOrDefault(k => k.Id == id)?.Nazwa ?? "---";

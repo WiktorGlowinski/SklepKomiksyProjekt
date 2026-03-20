@@ -1,17 +1,21 @@
 ﻿
-<div class="nav-item px-3">
-    <NavLink class="nav-link" href="produkty">
-        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Stan Magazynu
-    </NavLink>
-</div>
-
-<AuthorizeView Roles="Wlasciciel, Pracownik">
+<AuthorizeView>
     <Authorized>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="produkty">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Stan Magazynu
+            </NavLink>
+        </div>
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="add">
                 <span class="bi bi-plus-square-nav-menu" aria-hidden="true"></span> Dodaj Komiks
             </NavLink>
         </div>
+    </Authorized>
+</AuthorizeView>
+
+<AuthorizeView Roles="Wlasciciel">
+    <Authorized>
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="autorzy">
                 <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Autorzy
@@ -22,11 +26,6 @@
                 <span class="bi bi-box-nav-menu" aria-hidden="true"></span> Lokalizacje
             </NavLink>
         </div>
-
-    </Authorized>
-</AuthorizeView>
-<AuthorizeView>
-    <Authorized>
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="gatunki">
                 <span class="bi bi-tags-nav-menu" aria-hidden="true"></span> Gatunki
@@ -37,8 +36,9 @@
                 <span class="bi bi-building-nav-menu" aria-hidden="true"></span> Wydawnictwa
             </NavLink>
         </div>
-        </Authorized>
-        </AuthorizeView>
+    </Authorized>
+</AuthorizeView>
+
 <AuthorizeView>
     <Authorized>
         <div class="nav-item px-3 mt-4">
@@ -55,4 +55,3 @@
         </div>
     </NotAuthorized>
 </AuthorizeView>
-        

@@ -127,6 +127,39 @@ namespace SklepKomiksy.Services
                 .ToListAsync();
         }
 
+        // 1. Zmiana ilości sztuk (+ / -)
+        public async Task ZmienIloscAsync(long id, int zmiana)
+        {
+            var komiks = await _context.Produkty.FindAsync(id);
+            if (komiks != null)
+            {
+                komiks.Ilosc += zmiana;
+                if (komiks.Ilosc < 0) komiks.Ilosc = 0; // Blokada poniżej zera
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        // 2. Szybka zmiana lokalizacji z poziomu tabeli
+        public async Task ZmienLokalizacjeAsync(long id, int? noweIdLokalizacji)
+        {
+            var komiks = await _context.Produkty.FindAsync(id);
+            if (komiks != null)
+            {
+                komiks.IdLokalizacji = noweIdLokalizacji;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        // 3. Usuwanie komiksu (tylko dla Szefa)
+        public async Task UsunKomiksAsync(long id)
+        {
+            var komiks = await _context.Produkty.FindAsync(id);
+            if (komiks != null)
+            {
+                _context.Produkty.Remove(komiks);
+                await _context.SaveChangesAsync();
+            }
+        }
         // --- Metody dla Wydawnictw ---
 
         public async Task DodajWydawnictwoAsync(Wydawnictwo wydawnictwo)
