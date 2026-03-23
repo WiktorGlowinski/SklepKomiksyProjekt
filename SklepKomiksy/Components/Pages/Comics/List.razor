@@ -1,6 +1,7 @@
 ﻿@page "/produkty" 
 @using SklepKomiksy.Models
 @inject SklepKomiksy.Services.ProduktService ProduktService
+@inject AuthenticationStateProvider AuthStateProvider
 
 <h3><i class="bi bi-box-seam"></i> Stan Magazynu</h3>
 <hr />
@@ -120,6 +121,7 @@
 </div>
 
 @code {
+    private string nazwaZalogowanego = "Nieznany";
     private List<Produkt>? komiksy;
     private List<Wydawnictwo> wydawnictwa = new();
     private List<KategoriaWiekowa> kategorie = new();
@@ -171,38 +173,42 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // 1. Pobieramy dane zalogowanego użytkownika
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        nazwaZalogowanego = authState.User.Identity?.Name ?? "Nieznany";
+
+        // 2. Pobieramy dane do tabeli
         komiksy = await ProduktService.PobierzKomiksyAsync();
         wydawnictwa = await ProduktService.PobierzWydawnictwaAsync();
         kategorie = await ProduktService.PobierzKategorieWiekoweAsync();
         lokalizacje = await ProduktService.PobierzLokalizacjeAsync();
     }
 
-    // --- METODY DO SORTOWANIA ---
+    // --- METODY DO SORTOWANIA (bez zmian) ---
     private void Sortuj(string nazwaKolumny)
     {
         if (aktualnaKolumnaSortowania == nazwaKolumny)
         {
-            // Jeśli klikamy w tę samą kolumnę, odwracamy kierunek sortowania
             rosnaco = !rosnaco;
         }
         else
         {
-            // Nowa kolumna = sortuj rosnąco
             aktualnaKolumnaSortowania = nazwaKolumny;
             rosnaco = true;
         }
     }
 
-    // Wyświetla ładne strzałki w nagłówkach
     private string WyswietlIkoneSortowania(string nazwaKolumny)
     {
         if (aktualnaKolumnaSortowania != nazwaKolumny) return "↕";
         return rosnaco ? "↑" : "↓";
     }
 
+    // --- METODY ZMIENIAJĄCE DANE (TUTAJ JEST ZMIANA!) ---
     private async Task ZmienIlosc(long id, int zmiana)
     {
-        await ProduktService.ZmienIloscAsync(id, zmiana);
+        // Dodajemy nazwaZalogowanego jako trzeci parametr
+        await ProduktService.ZmienIloscAsync(id, zmiana, nazwaZalogowanego);
         komiksy = await ProduktService.PobierzKomiksyAsync();
     }
 
@@ -219,10 +225,12 @@
 
     private async Task UsunKomiks(long id)
     {
-        await ProduktService.UsunKomiksAsync(id);
+        // Dodajemy nazwaZalogowanego jako drugi parametr
+        await ProduktService.UsunKomiksAsync(id, nazwaZalogowanego);
         komiksy = await ProduktService.PobierzKomiksyAsync();
     }
-    // --- FUNKCJE POMOCNICZE (z poprzedniego kroku) ---
+
+    // --- FUNKCJE POMOCNICZE ---
     private string PobierzNazweWydawnictwa(int? id) => wydawnictwa.FirstOrDefault(w => w.Id == id)?.Nazwa ?? "---";
     private string PobierzNazweKategorii(int? id) => kategorie.FirstOrDefault(k => k.Id == id)?.Nazwa ?? "---";
     
@@ -231,4 +239,4 @@
         var loc = lokalizacje.FirstOrDefault(l => l.Id == id);
         return loc == null ? "---" : $"Regał: {loc.Regal}, Półka: {loc.Polka}";
     }
-}
+    }

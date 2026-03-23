@@ -1,7 +1,80 @@
 ﻿@page "/"
+@using SklepKomiksy.Models
+@inject SklepKomiksy.Services.ProduktService ProduktService
 
-<PageTitle>Home</PageTitle>
+<div class="p-5 mb-4 rounded-3 shadow-sm text-white" style="background: linear-gradient(135deg, #2c3e50, #3498db);">
+    <div class="container-fluid py-2">
+        <h1 class="display-5 fw-bold"><i class="bi bi-box-seam me-3"></i> Centrum Zarządzania</h1>
+        <p class="col-md-8 fs-5 mt-3">
+            Witaj w systemie magazynowym. Kontroluj stany, dodawaj nowości i zarządzaj swoją kolekcją w jednym miejscu.
+        </p>
+    </div>
+</div>
 
-<h1>Witaj w bazie komiksów naszego sklepu!</h1>
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white shadow border-0 rounded-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="card-title text-uppercase text-white-50 m-0 fw-bold">Wartość Magazynu</h6>
+                    <i class="bi bi-cash-coin fs-4 opacity-50"></i>
+                </div>
+                <h3 class="fw-bold mb-0">@WartoscCalkowita.ToString("N2") zł</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white shadow border-0 rounded-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="card-title text-uppercase text-white-50 m-0 fw-bold">Sztuk na Półkach</h6>
+                    <i class="bi bi-collection fs-4 opacity-50"></i>
+                </div>
+                <h3 class="fw-bold mb-0">@LacznaIloscSztuk szt.</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white shadow border-0 rounded-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="card-title text-uppercase text-white-50 m-0 fw-bold">Unikalne Tytuły</h6>
+                    <i class="bi bi-book fs-4 opacity-50"></i>
+                </div>
+                <h3 class="fw-bold mb-0">@UnikalneTytuly</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white shadow border-0 rounded-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="card-title text-uppercase text-white-50 m-0 fw-bold">Braki Magazynowe</h6>
+                    <i class="bi bi-exclamation-triangle fs-4 opacity-50"></i>
+                </div>
+                <h3 class="fw-bold mb-0">@BrakiWmagazynie</h3>
+            </div>
+        </div>
+    </div>
+</div>
 
-Zaloguj się aby kontynuować
+@code {
+    private decimal WartoscCalkowita = 0;
+    private int LacznaIloscSztuk = 0;
+    private int BrakiWmagazynie = 0;
+    private int UnikalneTytuly = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Pobieramy dane z bazy tylko po to, żeby wyliczyć statystyki na ekran startowy
+        var komiksy = await ProduktService.PobierzKomiksyAsync();
+        
+        if (komiksy != null && komiksy.Any())
+        {
+            WartoscCalkowita = komiksy.Sum(k => k.Cena * k.Ilosc);
+            LacznaIloscSztuk = komiksy.Sum(k => k.Ilosc);
+            BrakiWmagazynie = komiksy.Count(k => k.Ilosc == 0);
+            UnikalneTytuly = komiksy.Count;
+        }
+    }
+}

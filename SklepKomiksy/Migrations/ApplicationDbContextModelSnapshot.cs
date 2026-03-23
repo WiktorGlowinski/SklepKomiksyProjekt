@@ -291,6 +291,38 @@ namespace SklepKomiksy.Migrations
                     b.ToTable("gatunki");
                 });
 
+            modelBuilder.Entity("SklepKomiksy.Models.HistoriaOperacji", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("DataCzas")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("NazwaKomiksu")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Szczegoly")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TypAkcji")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Uzytkownik")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("HistorieOperacji");
+                });
+
             modelBuilder.Entity("SklepKomiksy.Models.KategoriaWiekowa", b =>
                 {
                     b.Property<long>("Id")

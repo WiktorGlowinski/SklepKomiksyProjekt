@@ -1,0 +1,175 @@
+﻿@page "/pracownicy"
+@attribute [Authorize(Roles = "Wlasciciel")]
+@using Microsoft.AspNetCore.Identity
+@using SklepKomiksy.Data
+@inject UserManager<ApplicationUser> UserManager
+@inject RoleManager<IdentityRole> RoleManager
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold m-0"><i class="bi bi-people-fill text-primary me-2"></i> Zarządzanie Zespołem</h3>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-header bg-dark text-white fw-bold rounded-top">
+                <i class="bi bi-person-plus-fill me-1"></i> Dodaj nowego pracownika
+            </div>
+            <div class="card-body bg-white">
+                @if (!string.IsNullOrEmpty(komunikat))
+                {
+                    <div class="alert @(czyBlad ? "alert-danger" : "alert-success") py-2">@komunikat</div>
+                }
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Login (Imię i Nazwisko)</label>
+                    <input type="text" class="form-control" @bind="nowyLogin" placeholder="np. jan.kowalski" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Hasło startowe</label>
+                    <input type="text" class="form-control" @bind="noweHaslo" placeholder="np. Pracownik123!" />
+                    <small class="text-muted">Hasło musi mieć dużą literę, cyfrę i znak specjalny.</small>
+                </div>
+                
+                <button class="btn btn-primary w-100 fw-bold" @onclick="ZarejestrujPracownika">
+                    Utwórz konto
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-body bg-white p-0">
+                <table class="table table-hover align-middle m-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Login użytkownika</th>
+                            <th>Rola w systemie</th>
+                            <th>Identyfikator w bazie</th>
+                            <th>Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in listaPracownikow)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-bold">@user.UserName</td>
+                                <td><span class="badge bg-info text-dark">Pracownik</span></td>
+                                <td><small class="text-muted">@user.Id</small></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="@(() => UsunPracownika(user.Id))">
+                                        <i class="bi bi-trash"></i> Usuń
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string nowyLogin = "";
+    private string noweHaslo = "";
+    private string komunikat = "";
+    private bool czyBlad = false;
+
+    private List<ApplicationUser> listaPracownikow = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await OdswiezListe();
+    }
+
+    private async Task OdswiezListe()
+    {
+        // Pobieramy wszystkich użytkowników, którzy nie są Właścicielem (dla uproszczenia pobieramy wszystkich)
+        listaPracownikow = UserManager.Users.ToList();
+    }
+
+    private async Task ZarejestrujPracownika()
+    {
+        if (string.IsNullOrWhiteSpace(nowyLogin) || string.IsNullOrWhiteSpace(noweHaslo))
+        {
+            WyswietlKomunikat("Wypełnij wszystkie pola!", true);
+            return;
+        }
+        
+        // Tworzymy nowy profil użytkownika
+        var nowyUzytkownik = new ApplicationUser
+        {
+            UserName = nowyLogin,
+            Email = nowyLogin + "@sklep.pl",
+            EmailConfirmed = true
+        };
+        
+        // Próba zapisu do bazy z hasłem
+        var rezultat = await UserManager.CreateAsync(nowyUzytkownik, noweHaslo);
+
+        if (rezultat.Succeeded)
+        {
+            // Upewniamy się, że rola "Pracownik" istnieje
+            if (!await RoleManager.RoleExistsAsync("Pracownik"))
+            {
+                await RoleManager.CreateAsync(new IdentityRole("Pracownik"));
+            }
+            
+            // Nadajemy rolę pracownika
+            await UserManager.AddToRoleAsync(nowyUzytkownik, "Pracownik");
+
+            WyswietlKomunikat($"Konto {nowyLogin} zostało utworzone!", false);
+            nowyLogin = "";
+            noweHaslo = "";
+            await OdswiezListe();
+        }
+        else
+        {
+            // Jeśli hasło jest za słabe (np. brak dużej litery), system wyrzuci tu błędy
+            var bledy = string.Join(" ", rezultat.Errors.Select(e => e.Description));
+            WyswietlKomunikat($"Błąd: {bledy}", true);
+        }
+    }
+
+    private async Task UsunPracownika(string idDoUsuniecia)
+    {
+        // 1. Sprawdzamy, kim jest obecny zalogowany Szef
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var nazwaZalogowanego = authState.User.Identity?.Name;
+
+        // 2. Szukamy w bazie pracownika, w którego kliknęliśmy
+        var pracownik = await UserManager.FindByIdAsync(idDoUsuniecia);
+        
+        if (pracownik != null)
+        {
+            // ZABEZPIECZENIE: Szef nie może usunąć sam siebie!
+            if (pracownik.UserName == nazwaZalogowanego)
+            {
+                WyswietlKomunikat("Błąd: Nie możesz usunąć własnego konta administratora!", true);
+                return;
+            }
+
+            // 3. Właściwe usunięcie z bazy
+            var rezultat = await UserManager.DeleteAsync(pracownik);
+            
+            if (rezultat.Succeeded)
+            {
+                WyswietlKomunikat($"Konto pracownika '{pracownik.UserName}' zostało usunięte na zawsze.", false);
+                await OdswiezListe(); // Przeładowuje tabelę
+            }
+            else
+            {
+                WyswietlKomunikat("Wystąpił problem z usunięciem konta z bazy danych.", true);
+            }
+        }
+    }
+
+    private void WyswietlKomunikat(string tresc, bool blad)
+    {
+        komunikat = tresc;
+        czyBlad = blad;
+    }
+}

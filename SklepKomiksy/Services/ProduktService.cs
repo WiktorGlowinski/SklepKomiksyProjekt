@@ -128,13 +128,25 @@ namespace SklepKomiksy.Services
         }
 
         // 1. Zmiana ilości sztuk (+ / -)
-        public async Task ZmienIloscAsync(long id, int zmiana)
+        public async Task ZmienIloscAsync(long id, int zmiana, string uzytkownik)
         {
             var komiks = await _context.Produkty.FindAsync(id);
             if (komiks != null)
             {
+                int staraIlosc = komiks.Ilosc;
                 komiks.Ilosc += zmiana;
-                if (komiks.Ilosc < 0) komiks.Ilosc = 0; // Blokada poniżej zera
+                if (komiks.Ilosc < 0) komiks.Ilosc = 0;
+
+                // LOGIKA REJESTRU AKTYWNOŚCI:
+                var historia = new HistoriaOperacji
+                {
+                    Uzytkownik = uzytkownik,
+                    TypAkcji = zmiana > 0 ? "Dostawa" : "Sprzedaż / Ubytek",
+                    NazwaKomiksu = komiks.Tytul,
+                    Szczegoly = $"Zmieniono stan magazynowy z {staraIlosc} na {komiks.Ilosc} szt."
+                };
+                _context.HistorieOperacji.Add(historia);
+
                 await _context.SaveChangesAsync();
             }
         }
@@ -151,11 +163,21 @@ namespace SklepKomiksy.Services
         }
 
         // 3. Usuwanie komiksu (tylko dla Szefa)
-        public async Task UsunKomiksAsync(long id)
+        public async Task UsunKomiksAsync(long id, string uzytkownik)
         {
             var komiks = await _context.Produkty.FindAsync(id);
             if (komiks != null)
             {
+                // LOGIKA REJESTRU AKTYWNOŚCI:
+                var historia = new HistoriaOperacji
+                {
+                    Uzytkownik = uzytkownik,
+                    TypAkcji = "Usunięcie",
+                    NazwaKomiksu = komiks.Tytul,
+                    Szczegoly = "Całkowicie usunięto pozycję z bazy danych."
+                };
+                _context.HistorieOperacji.Add(historia);
+
                 _context.Produkty.Remove(komiks);
                 await _context.SaveChangesAsync();
             }
