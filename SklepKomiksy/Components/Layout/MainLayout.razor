@@ -1,23 +1,15 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<div class="d-flex flex-column min-vh-100" style="background-color: #f4f6f9;">
+    <NavMenu />
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
+    <main class="flex-grow-1 p-4">
+        <div class="container-fluid max-w-screen-xl">
             @Body
-        </article>
+        </div>
     </main>
-</div>
-
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+    
+    <footer class="bg-dark text-white-50 text-center py-3 mt-auto shadow-lg">
+        <small>&copy; 2026 Twój Sklep Komiksowy - System Magazynowy</small>
+    </footer>
 </div>

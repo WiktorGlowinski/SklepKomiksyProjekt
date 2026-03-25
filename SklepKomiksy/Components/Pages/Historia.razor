@@ -1,0 +1,124 @@
+﻿@page "/historia"
+@attribute [Authorize(Roles = "Wlasciciel")]
+@using SklepKomiksy.Models
+@using Microsoft.EntityFrameworkCore
+@inject SklepKomiksy.Data.ApplicationDbContext Context
+
+<h3 class="fw-bold mb-4"><i class="bi bi-clock-history text-primary"></i> Rejestr Aktywności</h3>
+
+<!-- Wyszukiwarka po pracowniku -->
+<div class="row mb-3">
+    <div class="col-md-4">
+        <div class="input-group shadow-sm">
+            <span class="input-group-text bg-dark text-white"><i class="bi bi-person-badge"></i></span>
+            <input type="text" class="form-control" placeholder="Szukaj po loginie pracownika..."
+                   @bind="WyszukiwanyPracownik" @bind:event="oninput" />
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive shadow-sm bg-white p-3 rounded-3">
+    <table class="table table-hover align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th @onclick='() => Sortuj("Data")' style="cursor: pointer;" class="user-select-none">
+                    Data i Czas @WyswietlIkone("Data")
+                </th>
+                <th @onclick='() => Sortuj("Pracownik")' style="cursor: pointer;" class="user-select-none text-warning">
+                    Pracownik @WyswietlIkone("Pracownik")
+                </th>
+                <th>Akcja</th>
+                <th>Komiks</th>
+                <th>Szczegóły</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!WyswietlaneLogi.Any())
+            {
+                <tr><td colspan="5" class="text-center text-muted">Brak wyników do wyświetlenia.</td></tr>
+            }
+            else
+            {
+                @foreach (var wpis in WyswietlaneLogi)
+                {
+                    <tr>
+                        <td><small class="text-muted">@wpis.DataCzas.ToString("dd.MM.yyyy HH:mm:ss")</small></td>
+                        <td class="fw-bold">@wpis.Uzytkownik</td>
+                        <td>
+                            <span class="badge @(wpis.TypAkcji == "Usunięcie" ? "bg-danger" : (wpis.TypAkcji == "Dostawa" ? "bg-success" : "bg-warning text-dark"))">
+                                @wpis.TypAkcji
+                            </span>
+                        </td>
+                        <td>@wpis.NazwaKomiksu</td>
+                        <td><small>@wpis.Szczegoly</small></td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<HistoriaOperacji> logi = new();
+
+    // --- ZMIENNE DO FILTROWANIA I SORTOWANIA ---
+    public string WyszukiwanyPracownik { get; set; } = "";
+    private string aktualnaKolumnaSortowania = "Data";
+    private bool rosnaco = false; // Domyślnie sortujemy od najnowszych dat
+
+    // Lista generowana w locie, reagująca na wpisywanie tekstu i klikanie nagłówków
+    private IEnumerable<HistoriaOperacji> WyswietlaneLogi
+    {
+        get
+        {
+            var wynik = logi.AsEnumerable();
+
+            // 1. Filtrowanie (Wyszukiwanie po loginie)
+            if (!string.IsNullOrWhiteSpace(WyszukiwanyPracownik))
+            {
+                wynik = wynik.Where(h => h.Uzytkownik.Contains(WyszukiwanyPracownik, StringComparison.OrdinalIgnoreCase));
+            }
+
+            // 2. Sortowanie
+            if (aktualnaKolumnaSortowania == "Pracownik")
+            {
+                wynik = rosnaco ? wynik.OrderBy(h => h.Uzytkownik) : wynik.OrderByDescending(h => h.Uzytkownik);
+            }
+            else if (aktualnaKolumnaSortowania == "Data")
+            {
+                wynik = rosnaco ? wynik.OrderBy(h => h.DataCzas) : wynik.OrderByDescending(h => h.DataCzas);
+            }
+
+            return wynik;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Pobieramy ostatnie 200 wpisów do analizy
+        logi = await Context.HistorieOperacji
+            .OrderByDescending(h => h.DataCzas)
+            .Take(200)
+            .ToListAsync();
+    }
+
+    // --- METODY DO SORTOWANIA ---
+    private void Sortuj(string kolumna)
+    {
+        if (aktualnaKolumnaSortowania == kolumna)
+        {
+            rosnaco = !rosnaco;
+        }
+        else
+        {
+            aktualnaKolumnaSortowania = kolumna;
+            rosnaco = true;
+        }
+    }
+
+    private string WyswietlIkone(string kolumna)
+    {
+        if (aktualnaKolumnaSortowania != kolumna) return "↕";
+        return rosnaco ? "↑" : "↓";
+    }
+}

@@ -1,57 +1,62 @@
 ﻿
-<AuthorizeView>
-    <Authorized>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="produkty">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Stan Magazynu
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="add">
-                <span class="bi bi-plus-square-nav-menu" aria-hidden="true"></span> Dodaj Komiks
-            </NavLink>
-        </div>
-    </Authorized>
-</AuthorizeView>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow">
+    <div class="container-fluid">
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#glowneMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-<AuthorizeView Roles="Wlasciciel">
-    <Authorized>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="autorzy">
-                <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Autorzy
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="lokalizacje">
-                <span class="bi bi-box-nav-menu" aria-hidden="true"></span> Lokalizacje
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="gatunki">
-                <span class="bi bi-tags-nav-menu" aria-hidden="true"></span> Gatunki
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="wydawnictwa">
-                <span class="bi bi-building-nav-menu" aria-hidden="true"></span> Wydawnictwa
-            </NavLink>
-        </div>
-    </Authorized>
-</AuthorizeView>
+        <div class="collapse navbar-collapse" id="glowneMenu">
+            
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
+                
+                <AuthorizeView>
+                    <Authorized>
+                        <li class="nav-item">
+                            <NavLink class="nav-link px-3" href="produkty">Stan Magazynu</NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link px-3" href="add">Dodaj Komiks</NavLink>
+                        </li>
+                    </Authorized>
+                </AuthorizeView>
 
-<AuthorizeView>
-    <Authorized>
-        <div class="nav-item px-3 mt-4">
-            <a class="nav-link text-warning" href="/api/wyloguj" target="_top">
-                <span class="bi bi-box-arrow-right-nav-menu" aria-hidden="true"></span> Wyloguj
-            </a>
+                <AuthorizeView Roles="Wlasciciel">
+                    <Authorized>
+                        <li class="nav-item">
+                            <NavLink class="nav-link px-3" href="autorzy">Autorzy</NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link px-3" href="gatunki">Gatunki</NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link px-3" href="wydawnictwa">Wydawnictwa</NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link px-3" href="lokalizacje">Lokalizacje</NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link px-3 text-warning" href="historia"><i class="bi bi-shield-lock me-1"></i> Historia</NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link px-3" href="pracownicy"><i class="bi bi-people me-1"></i> Pracownicy</NavLink>
+                        </li>
+                    </Authorized>
+                </AuthorizeView>
+            </ul>
+
+            <div class="d-flex align-items-center">
+                <AuthorizeView>
+                    <Authorized>
+                        <span class="text-light me-3"><i class="bi bi-person-circle"></i> Witaj, @context.User.Identity?.Name!</span>
+                        <a class="btn btn-warning btn-sm fw-bold" href="/api/wyloguj" target="_top">Wyloguj</a>
+                    </Authorized>
+                    <NotAuthorized>
+                        <NavLink class="btn btn-success fw-bold" href="login">Zaloguj się</NavLink>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </div>
+            
         </div>
-    </Authorized>
-    <NotAuthorized>
-        <div class="nav-item px-3 mt-4">
-            <NavLink class="nav-link text-success" href="login">
-                <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Zaloguj się
-            </NavLink>
-        </div>
-    </NotAuthorized>
-</AuthorizeView>
+    </div>
+</nav>

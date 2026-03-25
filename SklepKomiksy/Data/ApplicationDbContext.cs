@@ -17,5 +17,6 @@ namespace SklepKomiksy.Data
         public DbSet<KategoriaWiekowa> KategorieWiekowe { get; set; }
         public DbSet<Lokalizacja> Lokalizacje { get; set; }
         public DbSet<Wydawnictwo> Wydawnictwa { get; set; }
+        public DbSet<HistoriaOperacji> HistorieOperacji { get; set; }
     }
 }
