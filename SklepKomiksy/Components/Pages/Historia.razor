@@ -40,19 +40,19 @@
             else
             {
                 @foreach (var wpis in WyswietlaneLogi)
-                {
-                    <tr>
-                        <td><small class="text-muted">@wpis.DataCzas.ToString("dd.MM.yyyy HH:mm:ss")</small></td>
-                        <td class="fw-bold">@wpis.Uzytkownik</td>
-                        <td>
-                            <span class="badge @(wpis.TypAkcji == "Usunięcie" ? "bg-danger" : (wpis.TypAkcji == "Dostawa" ? "bg-success" : "bg-warning text-dark"))">
-                                @wpis.TypAkcji
-                            </span>
-                        </td>
-                        <td>@wpis.NazwaKomiksu</td>
-                        <td><small>@wpis.Szczegoly</small></td>
-                    </tr>
-                }
+            {
+                <tr>
+                    <td><small class="text-muted">@wpis.DataCzas.ToString("dd.MM.yyyy HH:mm:ss")</small></td>
+                    <td class="fw-bold">@wpis.Uzytkownik</td>
+                    <td>
+                        <span class="badge @(wpis.TypAkcji == "Usunięcie" ? "bg-danger" : (wpis.TypAkcji == "Dostawa" ? "bg-success" : "bg-warning text-dark"))">
+                            @wpis.TypAkcji
+                        </span>
+                    </td>
+                    <td>@wpis.NazwaKomiksu</td>
+                    <td><small>@wpis.Szczegoly</small></td>
+                </tr>
+            }
             }
         </tbody>
     </table>
