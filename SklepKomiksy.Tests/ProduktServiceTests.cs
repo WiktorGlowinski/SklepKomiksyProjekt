@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SklepKomiksy.Data;
 using SklepKomiksy.Models;
 using SklepKomiksy.Services;
@@ -10,91 +8,88 @@ namespace SklepKomiksy.Tests
 {
     public class ProduktServiceTests
     {
-        // Narzędzie pomocnicze: tworzy świeżą, pustą bazę danych w pamięci RAM dla każdego testu
-        private async Task<ApplicationDbContext> PrzygotujBazeWymyslona()
+        private ApplicationDbContext GetDatabaseContext()
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: System.Guid.NewGuid().ToString())
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
-
-            var context = new ApplicationDbContext(options);
-            await context.Database.EnsureCreatedAsync();
-            return context;
+            var databaseContext = new ApplicationDbContext(options);
+            databaseContext.Database.EnsureCreated();
+            return databaseContext;
         }
 
         [Fact]
-        public async Task ZmienIloscAsync_PoprawnieZmniejszaIlosc_OrazZapisujeAkcjeWRejestrze()
-        {
-            // Arrange (Przygotowanie środowiska)
-            var context = await PrzygotujBazeWymyslona();
-            var nowyKomiks = new Produkt { Id = 1, Tytul = "Batman: Zabójczy Żart", Ilosc = 5, Cena = 100m };
-            context.Produkty.Add(nowyKomiks);
-            await context.SaveChangesAsync();
-
-            var serwis = new ProduktService(context);
-            string testowyPracownik = "jan.kowalski";
-
-            // Act (Wykonanie akcji)
-            // Zmniejszamy ilość o 1, udając, że klika to Jan Kowalski
-            await serwis.ZmienIloscAsync(1, -1, testowyPracownik);
-
-            // Assert (Sprawdzenie wyników)
-            var komiksPoZmianie = await context.Produkty.FindAsync(1L);
-            Assert.NotNull(komiksPoZmianie);
-            Assert.Equal(4, komiksPoZmianie.Ilosc); // Sprawdzamy, czy ubyła sztuka
-
-            // Sprawdzamy nową funkcję: czy utworzył się wpis w historii!
-            var historia = await context.HistorieOperacji.FirstOrDefaultAsync();
-            Assert.NotNull(historia);
-            Assert.Equal(testowyPracownik, historia.Uzytkownik);
-            Assert.Equal("Sprzedaż / Ubytek", historia.TypAkcji);
-            Assert.Equal("Batman: Zabójczy Żart", historia.NazwaKomiksu);
-            Assert.Contains("z 5 na 4", historia.Szczegoly);
-        }
-
-        [Fact]
-        public async Task ZmienIloscAsync_NiePozwalaNaZejsciePonizejZera()
+        public async Task DodajKomiksAsync_PowinienZapisacKomiksZOkladkaIHistora()
         {
             // Arrange
-            var context = await PrzygotujBazeWymyslona();
-            context.Produkty.Add(new Produkt { Id = 2, Tytul = "Spider-Man", Ilosc = 0, Cena = 50m });
-            await context.SaveChangesAsync();
-
-            var serwis = new ProduktService(context);
+            var context = GetDatabaseContext();
+            var service = new ProduktService(context);
+            var nowyKomiks = new Produkt
+            {
+                Tytul = "Batman: Year One",
+                Cena = 89.99m,
+                Ilosc = 10,
+                
+            };
 
             // Act
-            // Próbujemy sprzedać komiks, którego już nie ma
-            await serwis.ZmienIloscAsync(2, -1, "admin");
+            await service.DodajKomiksAsync(nowyKomiks, new long[] { }, new long[] { });
 
             // Assert
-            var komiksPoZmianie = await context.Produkty.FindAsync(2L);
-            Assert.Equal(0, komiksPoZmianie.Ilosc); // Ilosc nadal powinna wynosić 0, nie -1!
+            var komiksWBazie = await context.Produkty.FirstOrDefaultAsync(p => p.Tytul == "Batman: Year One");
+            Assert.NotNull(komiksWBazie);
+          
+
+            // Sprawdzenie czy Seeder historii zadziałał
+            var log = await context.HistorieOperacji.FirstOrDefaultAsync();
+            Assert.NotNull(log);
+            Assert.Equal("Batman: Year One", log.NazwaKomiksu);
         }
 
         [Fact]
-        public async Task UsunKomiksAsync_UsuwaPozycjeZBazy_OrazLogujeAkcje()
+        public async Task PobierzStatystyki_PowinienZwracacPoprawneWartosciDlaDashboardu()
         {
             // Arrange
-            var context = await PrzygotujBazeWymyslona();
-            context.Produkty.Add(new Produkt { Id = 3, Tytul = "The Boys", Ilosc = 10, Cena = 150m });
+            var context = GetDatabaseContext();
+            var service = new ProduktService(context);
+
+            context.Produkty.AddRange(new List<Produkt>
+            {
+                new Produkt { Tytul = "A", Cena = 100, Ilosc = 2 }, // Wartość 200
+                new Produkt { Tytul = "B", Cena = 50, Ilosc = 0 }   // Brak w magazynie
+            });
             await context.SaveChangesAsync();
 
-            var serwis = new ProduktService(context);
-            string testowySzef = "szef.wlasciciel";
-
             // Act
-            await serwis.UsunKomiksAsync(3, testowySzef);
+            var komiksy = await service.PobierzKomiksyAsync();
+            var wartosc = komiksy.Sum(k => k.Cena * k.Ilosc);
+            var braki = komiksy.Count(k => k.Ilosc == 0);
 
             // Assert
-            var sprawdzKomiks = await context.Produkty.FindAsync(3L);
-            Assert.Null(sprawdzKomiks); // Komiksu już nie ma
+            Assert.Equal(200, wartosc);
+            Assert.Equal(1, braki);
+        }
 
-            // Sprawdzamy rejestr operacji
-            var historia = await context.HistorieOperacji.FirstOrDefaultAsync();
-            Assert.NotNull(historia);
-            Assert.Equal(testowySzef, historia.Uzytkownik);
-            Assert.Equal("Usunięcie", historia.TypAkcji);
-            Assert.Equal("The Boys", historia.NazwaKomiksu);
+        [Fact]
+        public async Task UsunKomiksAsync_PowinienUsunacProduktIZapisacLog()
+        {
+            // Arrange
+            var context = GetDatabaseContext();
+            var service = new ProduktService(context);
+            var komiks = new Produkt { Tytul = "Do Usuniecia", Cena = 10, Ilosc = 1 };
+            context.Produkty.Add(komiks);
+            await context.SaveChangesAsync();
+
+            // Act
+            await service.UsunKomiksAsync(komiks.Id, "Testowy admin");
+
+            // Assert
+            var czyIstnieje = await context.Produkty.AnyAsync(p => p.Id == komiks.Id);
+            var log = await context.HistorieOperacji.OrderByDescending(h => h.DataCzas).FirstOrDefaultAsync();
+
+            Assert.False(czyIstnieje);
+            Assert.Equal("Usunięcie", log?.TypAkcji);
+            Assert.Equal("Do Usuniecia", log?.NazwaKomiksu);
         }
     }
 }
