@@ -6,61 +6,82 @@
 @inject RoleManager<IdentityRole> RoleManager
 @inject AuthenticationStateProvider AuthStateProvider
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="fw-bold m-0"><i class="bi bi-people-fill text-primary me-2"></i> Zarządzanie Zespołem</h3>
+<div class="mb-8">
+    <h2 class="text-2xl font-black text-primary tracking-tight flex items-center gap-3">
+        <span class="material-symbols-outlined">badge</span>
+        Zarządzanie Zespołem
+    </h2>
+    <p class="text-on-surface-variant text-sm mt-1">Dodawaj nowych pracowników i zarządzaj dostępem do systemu.</p>
 </div>
 
-<div class="row">
-    <div class="col-md-4 mb-4">
-        <div class="card shadow-sm border-0 rounded-3">
-            <div class="card-header bg-dark text-white fw-bold rounded-top">
-                <i class="bi bi-person-plus-fill me-1"></i> Dodaj nowego pracownika
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+    
+    <div class="lg:col-span-1">
+        <div class="bg-surface-container-high rounded-2xl border border-outline-variant/10 p-6 shadow-lg">
+            <div class="flex items-center gap-2 mb-6 border-b border-outline-variant/10 pb-4">
+                <span class="material-symbols-outlined text-secondary">person_add</span>
+                <h3 class="font-bold text-on-surface">Dodaj pracownika</h3>
             </div>
-            <div class="card-body bg-white">
-                @if (!string.IsNullOrEmpty(komunikat))
-                {
-                    <div class="alert @(czyBlad ? "alert-danger" : "alert-success") py-2">@komunikat</div>
-                }
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Login (Imię i Nazwisko)</label>
-                    <input type="text" class="form-control" @bind="nowyLogin" placeholder="np. jan.kowalski" />
+            @if (!string.IsNullOrEmpty(komunikat))
+            {
+                <div class="mb-4 px-4 py-3 rounded-lg text-sm font-medium border @(czyBlad ? "bg-error/10 text-error border-error/20" : "bg-secondary/10 text-secondary border-secondary/20")">
+                    @komunikat
                 </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Hasło startowe</label>
-                    <input type="text" class="form-control" @bind="noweHaslo" placeholder="np. Pracownik123!" />
-                    <small class="text-muted">Hasło musi mieć dużą literę, cyfrę i znak specjalny.</small>
+            }
+
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Login (Imię i Nazwisko)</label>
+                    <input type="text" class="w-full bg-surface-container border border-outline-variant/20 rounded-lg px-4 py-2.5 text-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary placeholder-on-surface-variant/40 transition-all" @bind="nowyLogin" placeholder="np. jan.kowalski" />
                 </div>
-                
-                <button class="btn btn-primary w-100 fw-bold" @onclick="ZarejestrujPracownika">
-                    Utwórz konto
-                </button>
+                <div>
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Hasło startowe</label>
+                    <input type="text" class="w-full bg-surface-container border border-outline-variant/20 rounded-lg px-4 py-2.5 text-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary placeholder-on-surface-variant/40 transition-all" @bind="noweHaslo" placeholder="np. Pracownik123!" />
+                    <p class="text-[10px] text-on-surface-variant/70 mt-1">Wymagane: duża litera, cyfra i znak specjalny.</p>
+                </div>
             </div>
+            
+            <button class="w-full primary-gradient text-on-primary font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-on-primary-container/20 hover:scale-[0.98] transition-transform" @onclick="ZarejestrujPracownika">
+                <span class="material-symbols-outlined text-sm">how_to_reg</span>
+                <span>Utwórz konto</span>
+            </button>
         </div>
     </div>
 
-    <div class="col-md-8">
-        <div class="card shadow-sm border-0 rounded-3">
-            <div class="card-body bg-white p-0">
-                <table class="table table-hover align-middle m-0">
-                    <thead class="table-light">
+    <div class="lg:col-span-2">
+        <div class="bg-surface-container-high rounded-2xl border border-outline-variant/10 overflow-hidden shadow-lg h-full">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-surface-container-highest border-b border-outline-variant/10 text-on-surface-variant text-[11px] uppercase tracking-wider font-bold">
                         <tr>
-                            <th class="ps-4">Login użytkownika</th>
-                            <th>Rola w systemie</th>
-                            <th>Identyfikator w bazie</th>
-                            <th>Akcje</th>
+                            <th class="px-6 py-4">Login użytkownika</th>
+                            <th class="px-6 py-4">Rola w systemie</th>
+                            <th class="px-6 py-4 hidden sm:table-cell">Identyfikator w bazie</th>
+                            <th class="px-6 py-4 text-right">Akcje</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y divide-outline-variant/10 text-sm">
                         @foreach (var user in listaPracownikow)
                         {
-                            <tr>
-                                <td class="ps-4 fw-bold">@user.UserName</td>
-                                <td><span class="badge bg-info text-dark">Pracownik</span></td>
-                                <td><small class="text-muted">@user.Id</small></td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-danger" @onclick="@(() => UsunPracownika(user.Id))">
-                                        <i class="bi bi-trash"></i> Usuń
+                            <tr class="hover:bg-surface-container-highest/40 transition-colors group">
+                                <td class="px-6 py-4 font-bold text-on-surface">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                            @user.UserName?.Substring(0, 1).ToUpper()
+                                        </div>
+                                        @user.UserName
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-3 py-1 rounded-full text-[10px] uppercase font-bold border bg-primary/10 text-primary border-primary/20">
+                                        Pracownik
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 hidden sm:table-cell text-xs text-on-surface-variant/50 font-mono">@user.Id</td>
+                                <td class="px-6 py-4 text-right">
+                                    <button class="p-2 rounded-lg text-error/70 hover:bg-error/10 hover:text-error transition-colors border border-transparent hover:border-error/20" title="Zwolnij pracownika" @onclick="@(() => UsunPracownika(user.Id))">
+                                        <span class="material-symbols-outlined text-[20px]">person_remove</span>
                                     </button>
                                 </td>
                             </tr>

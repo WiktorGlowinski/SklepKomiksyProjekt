@@ -1,37 +1,50 @@
 ﻿@page "/login"
 @using System.ComponentModel.DataAnnotations
-@using Microsoft.AspNetCore.Identity
-@using SklepKomiksy.Data
-@inject SignInManager<ApplicationUser> SignInManager
-@inject NavigationManager NavigationManager
-<h3>Logowanie do Systemu</h3>
-<hr />
+@inject NavigationManager Nav
 
-<div class="row">
-    <div class="col-md-4">
-        <form action="/api/zaloguj" method="post">
-            <AntiforgeryToken />
-            
-            @if (Error == true)
+<PageTitle>Logowanie - The Edge</PageTitle>
+
+<div class="min-h-[80vh] flex items-center justify-center px-4">
+    <div class="bg-surface-container-high rounded-3xl border border-outline-variant/10 p-8 md:p-12 shadow-2xl max-w-md w-full relative overflow-hidden">
+        
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
+        <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-secondary/10 rounded-full blur-3xl"></div>
+
+        <div class="relative z-10">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-black text-on-surface tracking-tight mb-2">The Edge</h2>
+                <p class="text-on-surface-variant text-sm uppercase tracking-widest font-bold">Autoryzacja dostępu</p>
+            </div>
+
+            @if (Nav.Uri.Contains("error=true"))
             {
-                <div class="alert alert-danger">Błędny email lub hasło!</div>
+                <div class="mb-6 px-4 py-3 rounded-lg text-sm font-medium border bg-error/10 text-error border-error/20 text-center">
+                    Nieprawidłowy login lub hasło.
+                </div>
             }
 
-            <div class="mb-3">
-                <label>Login:</label>
-                <input type="text" name="email" class="form-control" required />
-            </div>
-            <div class="mb-3">
-                <label>Hasło:</label>
-                <input type="password" name="password" class="form-control" required />
-            </div>
-            
-            <button type="submit" class="btn btn-primary w-100">Zaloguj</button>
-        </form>
+            <form action="/api/zaloguj" method="post" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Login / Email</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[20px]">person</span>
+                        <input name="email" type="text" class="w-full bg-surface-container border border-outline-variant/20 rounded-xl pl-11 pr-4 py-3 text-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary transition-all" placeholder="Wprowadź swój login..." required />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Hasło</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[20px]">lock</span>
+                        <input name="password" type="password" class="w-full bg-surface-container border border-outline-variant/20 rounded-xl pl-11 pr-4 py-3 text-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary transition-all" placeholder="••••••••" required />
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full primary-gradient text-on-primary font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary/25 hover:scale-[0.98] transition-transform mt-8">
+                    <span>Zaloguj do systemu</span>
+                    <span class="material-symbols-outlined text-sm">login</span>
+                </button>
+            </form>
+        </div>
     </div>
 </div>
-
-@code {
-    [SupplyParameterFromQuery(Name = "error")]
-    public bool? Error { get; set; }
-}

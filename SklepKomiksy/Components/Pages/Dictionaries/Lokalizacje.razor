@@ -1,34 +1,111 @@
 ﻿@page "/lokalizacje"
+@attribute [Authorize(Roles = "Wlasciciel")]
 @using SklepKomiksy.Models
-@using SklepKomiksy.Services
-@attribute [Authorize(Roles = "Wlasciciel, Pracownik")]
-@inject ProduktService ProduktService
+@inject SklepKomiksy.Services.ProduktService ProduktService
 
-<h3>Zarządzanie Lokalizacjami</h3>
-<EditForm Model="nowaLokalizacja" OnValidSubmit="ZapiszLokalizacje" class="mb-4 p-3 border rounded">
-    <DataAnnotationsValidator />
-    <label>Regał:</label> <InputText @bind-Value="nowaLokalizacja.Regal" class="form-control mb-2" />
-    <label>Półka:</label> <InputNumber @bind-Value="nowaLokalizacja.Polka" class="form-control mb-2" />
-    <button type="submit" class="btn btn-primary">Dodaj Lokalizację</button>
-</EditForm>
+<div class="mb-8">
+    <h2 class="text-2xl font-black text-primary tracking-tight flex items-center gap-3">
+        <span class="material-symbols-outlined">location_on</span>
+        Lokalizacje
+    </h2>
+    <p class="text-on-surface-variant text-sm mt-1">Definiuj regały i półki do fizycznego umiejscowienia komiksów w magazynie.</p>
+</div>
 
-@if (listaLokalizacji != null)
-{
-    <table class="table table-striped">
-        <thead><tr><th>ID</th><th>Regał</th><th>Półka</th></tr></thead>
-        <tbody>
-            @foreach (var lok in listaLokalizacji)
-            {
-                <tr><td>@lok.Id</td><td>@lok.Regal</td><td>@lok.Polka</td></tr>
-            }
-        </tbody>
-    </table>
-}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+    <div class="lg:col-span-1">
+        <div class="bg-surface-container-high rounded-2xl border border-outline-variant/10 p-6 shadow-lg">
+            <div class="flex items-center gap-2 mb-6 border-b border-outline-variant/10 pb-4">
+                <span class="material-symbols-outlined text-secondary">add_location_alt</span>
+                <h3 class="font-bold text-on-surface">Dodaj lokalizację</h3>
+            </div>
+
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Numer/Symbol Regału</label>
+                    <input type="text" class="w-full bg-surface-container border border-outline-variant/20 rounded-lg px-4 py-2.5 text-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary placeholder-on-surface-variant/40 transition-all" @bind="nowyRegal" placeholder="np. A1" />
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Numer/Symbol Półki</label>
+                    <input type="number" class="w-full bg-surface-container border..." @bind="nowaPolka" placeholder="np. 3" />
+                </div>
+            </div>
+            
+            <button class="w-full primary-gradient text-on-primary font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-on-primary-container/20 hover:scale-[0.98] transition-transform" @onclick="ZapiszLokalizacje">
+                <span class="material-symbols-outlined text-sm">save</span>
+                <span>Zapisz w słowniku</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="lg:col-span-2">
+        <div class="bg-surface-container-high rounded-2xl border border-outline-variant/10 overflow-hidden shadow-lg h-full">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-surface-container-highest border-b border-outline-variant/10 text-on-surface-variant text-[11px] uppercase tracking-wider font-bold">
+                        <tr>
+                            <th class="px-6 py-4 w-16">ID</th>
+                            <th class="px-6 py-4">Regał</th>
+                            <th class="px-6 py-4">Półka</th>
+                            <th class="px-6 py-4 text-right">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant/10 text-sm">
+                        @if (listaLokalizacji != null)
+                        {
+                            @foreach (var element in listaLokalizacji)
+                            {
+                                <tr class="hover:bg-surface-container-highest/40 transition-colors group">
+                                    <td class="px-6 py-4 text-xs text-on-surface-variant/50 font-mono">@element.Id</td>
+                                    <td class="px-6 py-4 font-bold text-on-surface">@element.Regal</td>
+                                    <td class="px-6 py-4 font-bold text-on-surface">@element.Polka</td>
+                                    <td class="px-6 py-4 text-right">
+                                        <button class="p-2 rounded-lg text-error/70 hover:bg-error/10 hover:text-error transition-colors border border-transparent hover:border-error/20" title="Usuń rekord" @onclick="@(() => UsunLokalizacje(element.Id))">
+                                            <span class="material-symbols-outlined text-[20px]">delete</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
 @code {
-    private Lokalizacja nowaLokalizacja = new();
-    private List<Lokalizacja>? listaLokalizacji;
-    protected override async Task OnInitializedAsync() => await OdswiezListe();
-    private async Task ZapiszLokalizacje() { await ProduktService.DodajLokalizacjeAsync(nowaLokalizacja); nowaLokalizacja = new Lokalizacja(); await OdswiezListe(); }
-    private async Task OdswiezListe() => listaLokalizacji = await ProduktService.PobierzLokalizacjeAsync();
+    private List<Lokalizacja> listaLokalizacji = new();
+    private string nowyRegal = "";
+    private int? nowaPolka = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await OdswiezListe();
+    }
+
+    private async Task OdswiezListe()
+    {
+        listaLokalizacji = await ProduktService.PobierzLokalizacjeAsync();
+    }
+
+    private async Task ZapiszLokalizacje()
+    {
+        // POPRAWKA 1: Sprawdzamy, czy nowaPolka ma jakąkolwiek wartość (!= null)
+        if (!string.IsNullOrWhiteSpace(nowyRegal) && nowaPolka != null)
+        {
+            await ProduktService.DodajLokalizacjeAsync(new Lokalizacja { Regal = nowyRegal, Polka = nowaPolka });
+            
+            nowyRegal = "";
+            // POPRAWKA 2: Liczbę czyścimy przypisując jej null, a nie puste cudzysłowy
+            nowaPolka = null;
+            
+            await OdswiezListe();
+        }
+    }
+
+    private async Task UsunLokalizacje(long id)
+    {
+        await ProduktService.UsunLokalizacjeAsync(id);
+        await OdswiezListe();
+    }
 }

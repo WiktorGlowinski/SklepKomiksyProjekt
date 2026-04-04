@@ -1,34 +1,105 @@
 ﻿@page "/autorzy"
+@attribute [Authorize(Roles = "Wlasciciel")]
 @using SklepKomiksy.Models
-@using SklepKomiksy.Services
-@attribute [Authorize(Roles = "Wlasciciel, Pracownik")]
-@inject ProduktService ProduktService
+@inject SklepKomiksy.Services.ProduktService ProduktService
 
-<h3>Zarządzanie Autorami</h3>
-<EditForm Model="nowyAutor" OnValidSubmit="ZapiszAutora" class="mb-4 p-3 border rounded">
-    <DataAnnotationsValidator />
-    <label>Imię:</label> <InputText @bind-Value="nowyAutor.Imie" class="form-control mb-2" />
-    <label>Nazwisko:</label> <InputText @bind-Value="nowyAutor.Nazwisko" class="form-control mb-2" />
-    <button type="submit" class="btn btn-primary">Dodaj Autora</button>
-</EditForm>
+<div class="mb-8">
+    <h2 class="text-2xl font-black text-primary tracking-tight flex items-center gap-3">
+        <span class="material-symbols-outlined">person_edit</span>
+        Autorzy
+    </h2>
+    <p class="text-on-surface-variant text-sm mt-1">Zarządzaj bazą twórców komiksów, scenarzystów i rysowników.</p>
+</div>
 
-@if (listaAutorow != null)
-{
-    <table class="table table-striped">
-        <thead><tr><th>ID</th><th>Imię</th><th>Nazwisko</th></tr></thead>
-        <tbody>
-            @foreach (var autor in listaAutorow)
-            {
-                <tr><td>@autor.Id</td><td>@autor.Imie</td><td>@autor.Nazwisko</td></tr>
-            }
-        </tbody>
-    </table>
-}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+    <div class="lg:col-span-1">
+        <div class="bg-surface-container-high rounded-2xl border border-outline-variant/10 p-6 shadow-lg">
+            <div class="flex items-center gap-2 mb-6 border-b border-outline-variant/10 pb-4">
+                <span class="material-symbols-outlined text-secondary">person_add</span>
+                <h3 class="font-bold text-on-surface">Dodaj autora</h3>
+            </div>
+
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Imię</label>
+                    <input type="text" class="w-full bg-surface-container border border-outline-variant/20 rounded-lg px-4 py-2.5 text-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary placeholder-on-surface-variant/40 transition-all" @bind="noweImie" placeholder="np. Stan" />
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Nazwisko</label>
+                    <input type="text" class="w-full bg-surface-container border border-outline-variant/20 rounded-lg px-4 py-2.5 text-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary placeholder-on-surface-variant/40 transition-all" @bind="noweNazwisko" placeholder="np. Lee" />
+                </div>
+            </div>
+            
+            <button class="w-full primary-gradient text-on-primary font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-on-primary-container/20 hover:scale-[0.98] transition-transform" @onclick="ZapiszAutora">
+                <span class="material-symbols-outlined text-sm">save</span>
+                <span>Zapisz w słowniku</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="lg:col-span-2">
+        <div class="bg-surface-container-high rounded-2xl border border-outline-variant/10 overflow-hidden shadow-lg h-full">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-surface-container-highest border-b border-outline-variant/10 text-on-surface-variant text-[11px] uppercase tracking-wider font-bold">
+                        <tr>
+                            <th class="px-6 py-4 w-16">ID</th>
+                            <th class="px-6 py-4">Imię i Nazwisko</th>
+                            <th class="px-6 py-4 text-right">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant/10 text-sm">
+                        @if (listaAutorow != null)
+                        {
+                            @foreach (var element in listaAutorow)
+                            {
+                                <tr class="hover:bg-surface-container-highest/40 transition-colors group">
+                                    <td class="px-6 py-4 text-xs text-on-surface-variant/50 font-mono">@element.Id</td>
+                                    <td class="px-6 py-4 font-bold text-on-surface">@element.Imie @element.Nazwisko</td>
+                                    <td class="px-6 py-4 text-right">
+                                        <button class="p-2 rounded-lg text-error/70 hover:bg-error/10 hover:text-error transition-colors border border-transparent hover:border-error/20" title="Usuń rekord" @onclick="@(() => UsunAutora(element.Id))">
+                                            <span class="material-symbols-outlined text-[20px]">delete</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
 @code {
-    private Autor nowyAutor = new();
-    private List<Autor>? listaAutorow;
-    protected override async Task OnInitializedAsync() => await OdswiezListe();
-    private async Task ZapiszAutora() { await ProduktService.DodajAutoraAsync(nowyAutor); nowyAutor = new Autor(); await OdswiezListe(); }
-    private async Task OdswiezListe() => listaAutorow = await ProduktService.PobierzAutorowAsync();
+    private List<Autor> listaAutorow = new();
+    private string noweImie = "";
+    private string noweNazwisko = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await OdswiezListe();
+    }
+
+    private async Task OdswiezListe()
+    {
+        listaAutorow = await ProduktService.PobierzAutorowAsync();
+    }
+
+    private async Task ZapiszAutora()
+    {
+        if (!string.IsNullOrWhiteSpace(noweImie) || !string.IsNullOrWhiteSpace(noweNazwisko))
+        {
+            await ProduktService.DodajAutoraAsync(new Autor { Imie = noweImie, Nazwisko = noweNazwisko });
+            noweImie = "";
+            noweNazwisko = "";
+            await OdswiezListe();
+        }
+    }
+
+    private async Task UsunAutora(long id)
+    {
+        await ProduktService.UsunAutoraAsync(id);
+        await OdswiezListe();
+    }
 }

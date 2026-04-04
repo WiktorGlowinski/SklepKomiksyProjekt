@@ -1,62 +1,72 @@
 ﻿
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow">
-    <div class="container-fluid">
-        
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#glowneMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="glowneMenu">
-            
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
-                
-                <AuthorizeView>
-                    <Authorized>
-                        <li class="nav-item">
-                            <NavLink class="nav-link px-3" href="produkty">Stan Magazynu</NavLink>
-                        </li>
-                        <li class="nav-item">
-                            <NavLink class="nav-link px-3" href="add">Dodaj Komiks</NavLink>
-                        </li>
-                    </Authorized>
-                </AuthorizeView>
-
-                <AuthorizeView Roles="Wlasciciel">
-                    <Authorized>
-                        <li class="nav-item">
-                            <NavLink class="nav-link px-3" href="autorzy">Autorzy</NavLink>
-                        </li>
-                        <li class="nav-item">
-                            <NavLink class="nav-link px-3" href="gatunki">Gatunki</NavLink>
-                        </li>
-                        <li class="nav-item">
-                            <NavLink class="nav-link px-3" href="wydawnictwa">Wydawnictwa</NavLink>
-                        </li>
-                        <li class="nav-item">
-                            <NavLink class="nav-link px-3" href="lokalizacje">Lokalizacje</NavLink>
-                        </li>
-                        <li class="nav-item">
-                            <NavLink class="nav-link px-3 text-warning" href="historia"><i class="bi bi-shield-lock me-1"></i> Historia</NavLink>
-                        </li>
-                        <li class="nav-item">
-                            <NavLink class="nav-link px-3" href="pracownicy"><i class="bi bi-people me-1"></i> Pracownicy</NavLink>
-                        </li>
-                    </Authorized>
-                </AuthorizeView>
-            </ul>
-
-            <div class="d-flex align-items-center">
-                <AuthorizeView>
-                    <Authorized>
-                        <span class="text-light me-3"><i class="bi bi-person-circle"></i> Witaj, @context.User.Identity?.Name!</span>
-                        <a class="btn btn-warning btn-sm fw-bold" href="/api/wyloguj" target="_top">Wyloguj</a>
-                    </Authorized>
-                    <NotAuthorized>
-                        <NavLink class="btn btn-success fw-bold" href="login">Zaloguj się</NavLink>
-                    </NotAuthorized>
-                </AuthorizeView>
+<aside class="hidden md:flex flex-col h-screen fixed left-0 top-0 w-64 bg-[#131b2e] z-50 border-r border-[#45464d]/15">
+    <div class="px-6 py-8">
+        <div class="flex items-center gap-3 mb-10">
+            <div class="w-10 h-10 rounded-xl bg-secondary-container flex items-center justify-center">
+                <span class="material-symbols-outlined text-on-secondary-container" data-icon="auto_stories" style="font-variation-settings: 'FILL' 1;">auto_stories</span>
             </div>
-            
+            <div>
+                <h1 class="text-lg font-bold text-[#4edea3] leading-none">The Edge</h1>
+                <p class="text-[10px] uppercase tracking-widest text-on-surface-variant/60 mt-1">Comic Logistics</p>
+            </div>
         </div>
+        
+        <nav class="space-y-1">
+            <p class="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-[0.2em] px-4 mb-4">Nawigacja</p>
+            
+            <NavLink class="flex items-center text-[#c6c6cd] pl-4 py-3 hover:bg-[#2d3449] hover:text-white transition-all group" href="" Match="NavLinkMatch.All">
+                <span class="material-symbols-outlined mr-3 group-hover:text-secondary" data-icon="dashboard">dashboard</span>
+                <span class="text-sm">Dashboard</span>
+            </NavLink>
+
+            <AuthorizeView>
+                <Authorized>
+                    <NavLink class="flex items-center text-[#c6c6cd] pl-4 py-3 hover:bg-[#2d3449] hover:text-white transition-all group" href="produkty">
+                        <span class="material-symbols-outlined mr-3 group-hover:text-secondary" data-icon="inventory_2">inventory_2</span>
+                        <span class="text-sm">Stan Magazynu</span>
+                    </NavLink>
+                    <NavLink class="flex items-center text-[#c6c6cd] pl-4 py-3 hover:bg-[#2d3449] hover:text-white transition-all group" href="add">
+                        <span class="material-symbols-outlined mr-3 group-hover:text-secondary" data-icon="add_box">add_box</span>
+                        <span class="text-sm">Dodaj Komiks</span>
+                    </NavLink>
+                </Authorized>
+            </AuthorizeView>
+        </nav>
+
+        <AuthorizeView Roles="Wlasciciel">
+            <Authorized>
+                <nav class="mt-8 space-y-1">
+                    <p class="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-[0.2em] px-4 mb-4">Słowniki</p>
+                    <NavLink class="flex items-center text-[#c6c6cd] pl-4 py-3 hover:bg-[#2d3449] hover:text-white transition-all group" href="autorzy">
+                        <span class="material-symbols-outlined mr-3 group-hover:text-secondary" data-icon="person_edit">person_edit</span>
+                        <span class="text-sm">Autorzy</span>
+                    </NavLink>
+                    <NavLink class="flex items-center text-[#c6c6cd] pl-4 py-3 hover:bg-[#2d3449] hover:text-white transition-all group" href="gatunki">
+                        <span class="material-symbols-outlined mr-3 group-hover:text-secondary" data-icon="category">category</span>
+                        <span class="text-sm">Gatunki</span>
+                    </NavLink>
+                    <NavLink class="flex items-center text-[#c6c6cd] pl-4 py-3 hover:bg-[#2d3449] hover:text-white transition-all group" href="wydawnictwa">
+                        <span class="material-symbols-outlined mr-3 group-hover:text-secondary" data-icon="domain">domain</span>
+                        <span class="text-sm">Wydawnictwa</span>
+                    </NavLink>
+                    <NavLink class="flex items-center text-[#c6c6cd] pl-4 py-3 hover:bg-[#2d3449] hover:text-white transition-all group" href="lokalizacje">
+                        <span class="material-symbols-outlined mr-3 group-hover:text-secondary" data-icon="location_on">location_on</span>
+                        <span class="text-sm">Lokalizacje</span>
+                    </NavLink>
+                </nav>
+
+                <nav class="mt-8 space-y-1">
+                    <p class="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-[0.2em] px-4 mb-4">System</p>
+                    <NavLink class="flex items-center text-[#c6c6cd] pl-4 py-3 hover:bg-[#2d3449] hover:text-white transition-all group" href="historia">
+                        <span class="material-symbols-outlined mr-3 group-hover:text-secondary" data-icon="history">history</span>
+                        <span class="text-sm">Historia</span>
+                    </NavLink>
+                    <NavLink class="flex items-center text-[#c6c6cd] pl-4 py-3 hover:bg-[#2d3449] hover:text-white transition-all group" href="pracownicy">
+                        <span class="material-symbols-outlined mr-3 group-hover:text-secondary" data-icon="badge">badge</span>
+                        <span class="text-sm">Pracownicy</span>
+                    </NavLink>
+                </nav>
+            </Authorized>
+        </AuthorizeView>
     </div>
-</nav>
+</aside>

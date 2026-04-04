@@ -200,5 +200,24 @@ namespace SklepKomiksy.Services
             }
 
         }
+        public async Task UsunAutoraAsync(long id)
+        {
+            var autor = await _context.Autorzy.FindAsync(id);
+            if (autor != null)
+            {
+                _context.Autorzy.Remove(autor);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task UsunLokalizacjeAsync(long id)
+        {
+            var lokalizacja = await _context.Lokalizacje.FindAsync(id);
+            if (lokalizacja != null)
+            {
+                _context.Lokalizacje.Remove(lokalizacja);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

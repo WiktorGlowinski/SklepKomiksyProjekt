@@ -16,6 +16,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+builder.Services.AddAntiforgery();
 
 // Nowy system uwierzytelniania w .NET 10
 builder.Services.AddCascadingAuthenticationState();
@@ -57,7 +58,8 @@ else
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery(); // Wymagane w nowym Blazorze
-
+app.UseAuthentication();
+app.UseAuthorization();
 // Nowy sposób mapowania aplikacji Blazor
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

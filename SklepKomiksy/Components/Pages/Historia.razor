@@ -4,60 +4,64 @@
 @using Microsoft.EntityFrameworkCore
 @inject SklepKomiksy.Data.ApplicationDbContext Context
 
-<h3 class="fw-bold mb-4"><i class="bi bi-clock-history text-primary"></i> Rejestr Aktywności</h3>
+<div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+        <h2 class="text-2xl font-black text-primary tracking-tight flex items-center gap-3">
+            <span class="material-symbols-outlined">history</span>
+            Rejestr Aktywności
+        </h2>
+        <p class="text-on-surface-variant text-sm mt-1">Śledź każdą operację w magazynie. Sortuj i filtruj zdarzenia.</p>
+    </div>
 
-<!-- Wyszukiwarka po pracowniku -->
-<div class="row mb-3">
-    <div class="col-md-4">
-        <div class="input-group shadow-sm">
-            <span class="input-group-text bg-dark text-white"><i class="bi bi-person-badge"></i></span>
-            <input type="text" class="form-control" placeholder="Szukaj po loginie pracownika..."
-                   @bind="WyszukiwanyPracownik" @bind:event="oninput" />
-        </div>
+    <div class="relative w-full md:w-96">
+        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50">person_search</span>
+        <input type="text" class="w-full bg-surface-container border border-outline-variant/20 rounded-full pl-12 pr-4 py-2.5 text-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary placeholder-on-surface-variant/40 transition-all shadow-sm" placeholder="Szukaj po loginie pracownika..."
+               @bind="WyszukiwanyPracownik" @bind:event="oninput" />
     </div>
 </div>
 
-<div class="table-responsive shadow-sm bg-white p-3 rounded-3">
-    <table class="table table-hover align-middle">
-        <thead class="table-dark">
-            <tr>
-                <th @onclick='() => Sortuj("Data")' style="cursor: pointer;" class="user-select-none">
-                    Data i Czas @WyswietlIkone("Data")
-                </th>
-                <th @onclick='() => Sortuj("Pracownik")' style="cursor: pointer;" class="user-select-none text-warning">
-                    Pracownik @WyswietlIkone("Pracownik")
-                </th>
-                <th>Akcja</th>
-                <th>Komiks</th>
-                <th>Szczegóły</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (!WyswietlaneLogi.Any())
-            {
-                <tr><td colspan="5" class="text-center text-muted">Brak wyników do wyświetlenia.</td></tr>
-            }
-            else
-            {
-                @foreach (var wpis in WyswietlaneLogi)
-            {
+<div class="bg-surface-container-high rounded-2xl border border-outline-variant/10 overflow-hidden shadow-lg">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[800px]">
+            <thead class="bg-surface-container-highest border-b border-outline-variant/10 text-on-surface-variant text-[11px] uppercase tracking-wider font-bold">
                 <tr>
-                    <td><small class="text-muted">@wpis.DataCzas.ToString("dd.MM.yyyy HH:mm:ss")</small></td>
-                    <td class="fw-bold">@wpis.Uzytkownik</td>
-                    <td>
-                        <span class="badge @(wpis.TypAkcji == "Usunięcie" ? "bg-danger" : (wpis.TypAkcji == "Dostawa" ? "bg-success" : "bg-warning text-dark"))">
-                            @wpis.TypAkcji
-                        </span>
-                    </td>
-                    <td>@wpis.NazwaKomiksu</td>
-                    <td><small>@wpis.Szczegoly</small></td>
+                    <th @onclick='() => Sortuj("Data")' class="px-6 py-4 cursor-pointer hover:text-primary transition-colors select-none">
+                        Data i Czas <span class="text-secondary ml-1">@WyswietlIkone("Data")</span>
+                    </th>
+                    <th @onclick='() => Sortuj("Pracownik")' class="px-6 py-4 cursor-pointer hover:text-primary transition-colors select-none">
+                        Pracownik <span class="text-secondary ml-1">@WyswietlIkone("Pracownik")</span>
+                    </th>
+                    <th class="px-6 py-4">Akcja</th>
+                    <th class="px-6 py-4">Komiks</th>
+                    <th class="px-6 py-4">Szczegóły</th>
                 </tr>
-            }
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/10 text-sm">
+                @if (!WyswietlaneLogi.Any())
+                {
+                    <tr><td colspan="5" class="px-6 py-8 text-center text-on-surface-variant"><em>Brak wyników do wyświetlenia.</em></td></tr>
+                }
+                else
+                {
+                    @foreach (var wpis in WyswietlaneLogi)
+                    {
+                        <tr class="hover:bg-surface-container-highest/40 transition-colors">
+                            <td class="px-6 py-4 text-xs text-on-surface-variant">@wpis.DataCzas.ToString("dd.MM.yyyy HH:mm:ss")</td>
+                            <td class="px-6 py-4 font-bold text-on-surface">@wpis.Uzytkownik</td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1 rounded-full text-[10px] uppercase font-bold border @(wpis.TypAkcji == "Usunięcie" ? "bg-error/10 text-error border-error/20" : (wpis.TypAkcji == "Dostawa" ? "bg-secondary/10 text-secondary border-secondary/20" : "bg-tertiary/10 text-tertiary border-tertiary/20"))">
+                                    @wpis.TypAkcji
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-primary font-medium">@wpis.NazwaKomiksu</td>
+                            <td class="px-6 py-4 text-xs text-on-surface-variant">@wpis.Szczegoly</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
-
 @code {
     private List<HistoriaOperacji> logi = new();
 

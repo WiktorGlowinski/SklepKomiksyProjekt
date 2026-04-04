@@ -1,15 +1,100 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager NavManager
 
-<div class="d-flex flex-column min-vh-100" style="background-color: #f4f6f9;">
-    <NavMenu />
+<NavMenu />
 
-    <main class="flex-grow-1 p-4">
-        <div class="container-fluid max-w-screen-xl">
-            @Body
+<main class="flex-1 md:ml-64 flex flex-col h-screen overflow-y-auto bg-surface">
+    <header class="flex justify-between items-center w-full px-8 py-3 h-20 bg-[#0b1326] sticky top-0 z-40 border-b border-[#45464d]/15">
+        <div class="flex items-center gap-4 flex-1">
+            <div class="relative w-full max-w-md hidden md:block">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50">search</span>
+                <input class="w-full bg-surface-container border border-outline-variant/10 rounded-full pl-12 pr-4 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary placeholder-on-surface-variant/30"
+                       placeholder="Szukaj w systemie i wciśnij Enter..." type="text"
+                       @bind="wyszukiwanaFraza" @bind:event="oninput" @onkeyup="SzukajWSystemie" />
+            </div>
         </div>
-    </main>
-    
-    <footer class="bg-dark text-white-50 text-center py-3 mt-auto shadow-lg">
-        <small>&copy; 2026 Twój Sklep Komiksowy - System Magazynowy</small>
+        
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-2 relative">
+                <button class="p-2 text-on-surface-variant hover:bg-[#2d3449]/60 rounded-full transition-colors relative" @onclick="TogglePowiadomienia">
+                    <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-tertiary rounded-full border-2 border-surface"></span>
+                </button>
+
+                @if (pokazPowiadomienia)
+                {
+                    <div class="absolute top-12 right-0 w-72 bg-surface-container-high rounded-xl shadow-2xl border border-outline-variant/20 p-4 z-50">
+                        <h4 class="text-sm font-bold text-on-surface mb-3 border-b border-outline-variant/10 pb-2">Powiadomienia systemowe</h4>
+                        <div class="flex items-start gap-3 text-sm text-on-surface-variant">
+                            <span class="material-symbols-outlined text-error">warning</span>
+                            <div>
+                                <p class="font-bold text-on-surface">Raport gotowy</p>
+                                <p class="text-xs">Nowe podsumowanie miesiąca jest dostępne do pobrania na Dashboardzie.</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="h-8 w-[1px] bg-outline-variant/20 mx-2"></div>
+            
+            <AuthorizeView>
+                <Authorized>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-sm font-bold text-on-surface">
+                                @context.User.Identity?.Name?.Split('@')[0]
+                            </p>
+
+                            <p class="text-[10px] font-medium tracking-wide uppercase">
+                                <AuthorizeView Roles="Wlasciciel" Context="innerContext">
+                                    <Authorized>
+                                        <span class="text-primary">Administrator Systemu</span>
+                                    </Authorized>
+                                    <NotAuthorized>
+                                        <span class="text-secondary">Pracownik Sklepu</span>
+                                    </NotAuthorized>
+                                </AuthorizeView>
+                            </p>
+                        </div>
+
+                        <a href="/api/wyloguj" target="_top" class="flex items-center gap-1 text-on-tertiary-container text-xs font-bold hover:opacity-80 transition-opacity uppercase tracking-tighter">
+                            <span>Wyloguj</span>
+                            <span class="material-symbols-outlined text-sm">logout</span>
+                        </a>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="login" class="text-sm font-bold text-primary hover:underline">Zaloguj się</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+    </header>
+
+    <div class="px-8 py-8 flex-1">
+        @Body
+    </div>
+
+    <footer class="flex flex-col md:flex-row justify-between items-center px-10 py-8 mt-auto w-full border-t border-[#45464d]/15 bg-[#0b1326]">
+        <p class="text-xs tracking-wide text-[#c6c6cd]">© 2026 The Edge. System Magazynowy.</p>
     </footer>
-</div>
+</main>
+@code {
+    private string wyszukiwanaFraza = "";
+    private bool pokazPowiadomienia = false;
+
+    private void SzukajWSystemie(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(wyszukiwanaFraza))
+        {
+            // Przenosi do magazynu i przekazuje parametr w URL
+            NavManager.NavigateTo($"/produkty?szukaj={Uri.EscapeDataString(wyszukiwanaFraza)}");
+            wyszukiwanaFraza = ""; // Czyści pole po wyszukaniu
+            pokazPowiadomienia = false; // Chowa dzwonek, jeśli był otwarty
+        }
+    }
+
+    private void TogglePowiadomienia()
+    {
+        pokazPowiadomienia = !pokazPowiadomienia;
+    }
+}

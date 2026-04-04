@@ -1,51 +1,74 @@
 ﻿@page "/wydawnictwa"
+@attribute [Authorize(Roles = "Wlasciciel")]
 @using SklepKomiksy.Models
-@attribute [Authorize]
-@inject ProduktService ProduktService
+@inject SklepKomiksy.Services.ProduktService ProduktService
 
-<h3>Zarządzanie Wydawnictwami</h3>
-<hr />
+<div class="mb-8">
+    <h2 class="text-2xl font-black text-primary tracking-tight flex items-center gap-3">
+        <span class="material-symbols-outlined">domain</span>
+        Wydawnictwa
+    </h2>
+    <p class="text-on-surface-variant text-sm mt-1">Zarządzaj słownikiem dostępnym podczas dodawania nowych komiksów do systemu.</p>
+</div>
 
-<div class="row mb-4">
-    <div class="col-md-5">
-        <div class="input-group">
-            <input @bind="nowaNazwa" class="form-control" placeholder="Wpisz nazwę nowego wydawnictwa..." />
-            <button class="btn btn-success" @onclick="ZapiszWydawnictwo">Dodaj</button>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+    <div class="lg:col-span-1">
+        <div class="bg-surface-container-high rounded-2xl border border-outline-variant/10 p-6 shadow-lg">
+            <div class="flex items-center gap-2 mb-6 border-b border-outline-variant/10 pb-4">
+                <span class="material-symbols-outlined text-secondary">add_business</span>
+                <h3 class="font-bold text-on-surface">Dodaj pozycję</h3>
+            </div>
+
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Nazwa Wydawnictwa</label>
+                    <input type="text" class="w-full bg-surface-container border border-outline-variant/20 rounded-lg px-4 py-2.5 text-sm text-on-surface focus:ring-1 focus:ring-primary focus:border-primary placeholder-on-surface-variant/40 transition-all" @bind="nowaNazwa" placeholder="np. Marvel Comics" />
+                </div>
+            </div>
+            
+            <button class="w-full primary-gradient text-on-primary font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-on-primary-container/20 hover:scale-[0.98] transition-transform" @onclick="ZapiszWydawnictwo">
+                <span class="material-symbols-outlined text-sm">save</span>
+                <span>Zapisz w słowniku</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="lg:col-span-2">
+        <div class="bg-surface-container-high rounded-2xl border border-outline-variant/10 overflow-hidden shadow-lg h-full">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-surface-container-highest border-b border-outline-variant/10 text-on-surface-variant text-[11px] uppercase tracking-wider font-bold">
+                        <tr>
+                            <th class="px-6 py-4 w-16">ID</th>
+                            <th class="px-6 py-4">Nazwa</th>
+                            <th class="px-6 py-4 text-right">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant/10 text-sm">
+                        @if (listaWydawnictw != null)
+                        {
+                            @foreach (var element in listaWydawnictw)
+                            {
+                                <tr class="hover:bg-surface-container-highest/40 transition-colors group">
+                                    <td class="px-6 py-4 text-xs text-on-surface-variant/50 font-mono">@element.Id</td>
+                                    <td class="px-6 py-4 font-bold text-on-surface">@element.Nazwa</td>
+                                    <td class="px-6 py-4 text-right">
+                                        <button class="p-2 rounded-lg text-error/70 hover:bg-error/10 hover:text-error transition-colors border border-transparent hover:border-error/20" title="Usuń rekord" @onclick="@(() => UsunWydawnictwo(element.Id))">
+                                            <span class="material-symbols-outlined text-[20px]">delete</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
-@if (lista == null)
-{
-    <p><em>Ładowanie...</em></p>
-}
-else
-{
-    <table class="table table-striped table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Nazwa Wydawnictwa</th>
-                <th>Akcje</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var element in lista)
-            {
-                <tr>
-                    <td>@element.Id</td>
-                    <td>@element.Nazwa</td>
-                    <td>
-                        <button class="btn btn-danger btn-sm" @onclick="() => Usun(element.Id)">Usuń</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-
 @code {
-    private List<Wydawnictwo>? lista;
+    private List<Wydawnictwo> listaWydawnictw = new();
     private string nowaNazwa = "";
 
     protected override async Task OnInitializedAsync()
@@ -55,7 +78,7 @@ else
 
     private async Task OdswiezListe()
     {
-        lista = await ProduktService.PobierzWydawnictwaAsync();
+        listaWydawnictw = await ProduktService.PobierzWydawnictwaAsync();
     }
 
     private async Task ZapiszWydawnictwo()
@@ -68,7 +91,7 @@ else
         }
     }
 
-    private async Task Usun(long id)
+    private async Task UsunWydawnictwo(long id)
     {
         await ProduktService.UsunWydawnictwoAsync(id);
         await OdswiezListe();
