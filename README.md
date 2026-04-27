@@ -1,67 +1,81 @@
-SklepKomiksyProjekt
-Sklep z Komiksami - System Zarządzania Magazynem 
+1. Cel projektu
+The Edge to zaawansowany system klasy Warehouse Management System (WMS) stworzony specjalnie dla kolekcjonerów i sprzedawców komiksów. System pozwala na precyzyjne monitorowanie stanów magazynowych, wycenę kolekcji w czasie rzeczywistym oraz śledzenie historii operacji użytkowników.
 
-Lokalna aplikacja webowa stworzona w celu zarządzania stanem magazynowym sklepu z komiksami. Pozwala na sprawdzanie dostępności produktów, dodawanie nowych komiksów, edycję istniejących oraz zarządzanie słownikami (autorzy, lokalizacje w sklepie). Posiada wbudowany system autoryzacji z podziałem na role.
+2. Stos Technologiczny (Tech Stack)
+Framework: Blazor Web App (ASP.NET Core 9.0)
 
-Główne funkcjonalności
+Język: C# 13
 
-Dla Gości (Niezalogowanych):
-Przeglądanie aktualnego stanu magazynowego komiksów (tytuł, zeszyt, cena, dostępność).
-Dla Pracowników i Właściciela:
-Pełny CRUD (Dodawanie, Edycja, Usuwanie) dla asortymentu komiksów.
-Zarządzanie tabelami słownikowymi (dodawanie nowych Autorów oraz Lokalizacji).
-System Uwierzytelniania:
-Logowanie oparte na ASP.NET Core Identity.
-Autoryzacja dostępu do widoków i operacji na podstawie ról (Wlasciciel, Pracownik).
-Automatyczny seeder tworzący role i domyślne konto administratora przy pierwszym uruchomieniu.
+Baza Danych: MySQL / MariaDB
 
-Użyte Technologie
-Framework: .NET 10.0
-Frontend: Blazor Web App (Server-side rendering / Interactive Global)
-Baza Danych: MySQL (obsługiwana przez XAMPP)
-ORM: Entity Framework Core (z pakietem Pomelo.EntityFrameworkCore.MySql)
-Autoryzacja: ASP.NET Core Identity
-Testy Automatyczne: xUnit + EF Core InMemory Database
+ORM: Entity Framework Core 9.0 (z użyciem sterownika Pomelo.EntityFrameworkCore.MySql v9.0.0)
 
-Wymagania Wstępne
-Aby uruchomić projekt na swoim komputerze, będziesz potrzebować:
+Stylizacja: Tailwind CSS (Motyw: Cyberpunk Dark Mode)
 
-Visual Studio 2022 (z zainstalowanym workloadem "ASP.NET and web development").
-.NET 8.0 SDK.
-XAMPP (z uruchomionym modułem MySQL).
-##Instrukcja Uruchomienia
+Bezpieczeństwo: ASP.NET Core Identity (System ról: RBAC)
 
-Baza Danych (XAMPP):
+Testy: xUnit + Microsoft.EntityFrameworkCore.InMemory
 
-Uruchom XAMPP Control Panel i włącz moduł MySQL.
-Przejdź do phpMyAdmin (http://localhost/phpmyadmin) i utwórz bazę o nazwie sklep_komiksy.
-Zaimportuj dostarczony plik sklep_komiksy.sql, aby utworzyć strukturę tabel dla produktów i słowników.
-Konfiguracja Aplikacji:
+3. Architektura Systemu
+3.1. Model Danych (Baza Danych)
+Główny model danych opiera się na dwóch kluczowych encjach:
 
-Otwórz projekt w Visual Studio.
-Upewnij się, że w pliku appsettings.json connection string wskazuje na Twoją lokalną bazę:
-"ConnectionStrings": {
-  "DefaultConnection": "Server=localhost;Port=3306;Database=sklep_komiksy;Uid=root;Pwd=;"
-}
-Migracje Identity (Tabele logowania):
+Produkt: Zawiera szczegóły komiksu (Tytuł, Cena, Ilość, SciezkaOkladki).
 
-Otwórz konsolę w Visual Studio (View -> Other Windows -> Package Manager Console).
-Wpisz i zatwierdź komendę:
-Update-Database
-Uwaga: Ta komenda wygeneruje tabele dla użytkowników i ról wewnątrz Twojej bazy sklep_komiksy.
-Uruchomienie:
+HistoriaOperacji: Rejestruje każdą akcję wykonaną w systemie (Typ akcji, Użytkownik, Data, Nazwa komiksu).
 
-Wciśnij F5 lub kliknij przycisk "Run" w Visual Studio.
-Przy pierwszym uruchomieniu system automatycznie utworzy role i domyślne konto Właściciela.
-##Domyślne Konto Logowania
+3.2. Bezpieczeństwo i Role
+System rozróżnia dwa poziomy uprawnień:
 
-Aby uzyskać dostęp do panelu zarządzania magazynem po pierwszym uruchomieniu, użyj poniższych danych:
+Administrator Systemu (Rola: Wlasciciel): Pełny dostęp do statystyk finansowych, historii operacji oraz zarządzania bazą.
 
-Email: admin@sklep.pl
-Hasło: Szef123!
-Rola: Właściciel
-##Testy Jednostkowe
+Pracownik Sklepu (Rola: Pracownik): Podstawowy dostęp do listy produktów i sprzedaży, bez wglądu w logi systemowe i globalne wartości magazynu.
 
-Projekt zawiera zestaw testów automatycznych weryfikujących poprawność działania logiki biznesowej (ProduktService). Testy są odizolowane od głównej bazy danych i wykorzystują bazę w pamięci RAM (InMemoryDatabase).
+4. Kluczowe Funkcjonalności
+4.1. Interaktywny Dashboard
+KPI (Key Performance Indicators): Dynamiczne kafelki sumujące wartość magazynu, liczbę egzemplarzy i unikalnych tytułów.
 
-Aby uruchomić testy, w Visual Studio otwórz Test Explorer (Ctrl+E, T) i kliknij **Run A
+System Alertów: Automatyczne wykrywanie i oznaczanie braków magazynowych (Ilość = 0).
+
+Ostatnie Operacje: Widok historii (tylko dla Administratora) z podglądem okładek komiksów.
+
+4.2. Zaawansowany UI/UX
+Custom Login Screen: Całkowicie przeprojektowany ekran logowania z efektami "Glow" i pełną obsługą klawisza Enter.
+
+Dynamiczne Obrazki: Integracja pola SciezkaOkladki, pozwalająca na wizualizację kolekcji.
+
+Responsywność: Interfejs dostosowujący się do urządzeń mobilnych dzięki siatce (Grid) Tailwind.
+
+4.3. Raportowanie PDF
+Zaimplementowano moduł raportowania wykorzystujący mechanizm window.print oraz dedykowane style CSS @media print. System automatycznie:
+
+Ukrywa elementy nawigacyjne i przyciski.
+
+Konwertuje ciemny motyw na kontrastowy biało-czarny układ (oszczędność toneru).
+
+Wymusza format A4 i odpowiednie marginesy dokumentu.
+
+5. Rozwiązane Problemy Techniczne (Post-Mortem)
+5.1. Konflikt Zależności (The Versioning War)
+Podczas rozwoju napotkano błąd MissingMethodException. Rozwiązaniem było zsynchronizowanie wersji bibliotek Microsoftu z wersją sterownika Pomelo (wszystkie paczki EF Core zostały zablokowane na wersji 9.0.x), co zapobiegło konfliktom wewnątrz warstwy abstrakcji bazy danych.
+
+5.2. Autoryzacja i Antiforgery
+Wprowadzono dedykowane endpointy API (/api/zaloguj, /api/wyloguj) z wyłączoną walidacją Antiforgery tylko dla procesów logowania, co wyeliminowało błędy tokenów CSRF przy zachowaniu wysokiego bezpieczeństwa pozostałych części aplikacji.
+
+6. Testowanie i Jakość Kodu
+Projekt zawiera dedykowany zestaw testów jednostkowych (xUnit), które sprawdzają:
+
+Poprawność zapisu produktów do bazy.
+
+Automatyczne generowanie logów historii po dodaniu/usunięciu produktu.
+
+Poprawność wyliczeń statystycznych na Dashboardzie.
+
+Jak uruchomić projekt?
+Skonfiguruj bazę MySQL w pliku appsettings.json.
+
+Wykonaj migrację bazy: Update-Database.
+
+Uruchom projekt: dotnet run.
+
+System automatycznie zainicjuje role i konto administratora poprzez klasę DbSeeder.
